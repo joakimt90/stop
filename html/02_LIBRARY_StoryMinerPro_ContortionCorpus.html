@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>StoryMinerPro – Contortion Corpus</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300..700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --text-xs: clamp(0.75rem, 0.7rem + 0.25vw, 0.875rem);
+  --text-sm: clamp(0.875rem, 0.8rem + 0.35vw, 1rem);
+  --text-base: clamp(1rem, 0.95rem + 0.25vw, 1.125rem);
+  --text-lg: clamp(1.125rem, 1rem + 0.75vw, 1.5rem);
+  --text-xl: clamp(1.5rem, 1.2rem + 1.25vw, 2.25rem);
+  --text-2xl: clamp(2rem, 1.2rem + 2.5vw, 3.5rem);
+  --space-1: .25rem; --space-2: .5rem; --space-3: .75rem; --space-4: 1rem;
+  --space-5: 1.25rem; --space-6: 1.5rem; --space-8: 2rem; --space-10: 2.5rem;
+  --space-12: 3rem; --space-16: 4rem;
+  --radius-sm: .375rem; --radius-md: .5rem; --radius-lg: .75rem; --radius-xl: 1rem; --radius-full: 9999px;
+  --transition: 180ms cubic-bezier(0.16,1,0.3,1);
+  --font-display: 'Instrument Serif', Georgia, serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+}
+[data-theme="dark"] {
+  --bg:#0d1016; --bg-2:#131925; --surface:#161b24; --surface-2:#1b2330; --surface-3:#243041;
+  --border:rgba(255,255,255,.1); --divider:rgba(255,255,255,.08); --text:#edf2f8; --muted:#a9b4c7; --faint:#778196;
+  --accent:#70dfcb; --accent-dim:rgba(112,223,203,.12); --accent-hover:#4fd4be; --tag-bg:rgba(255,255,255,.05);
+  --shadow-md:0 4px 18px rgba(0,0,0,.35); --shadow-lg:0 12px 40px rgba(0,0,0,.45);
+  --core-color:#70dfcb; --core-bg:rgba(112,223,203,.14); --strong-color:#91a7ff; --strong-bg:rgba(145,167,255,.14);
+  --partial-color:#ffcb6f; --partial-bg:rgba(255,203,111,.14); --weak-color:#ff8094; --weak-bg:rgba(255,128,148,.14);
+}
+[data-theme="light"] {
+  --bg:#f3f6fb; --bg-2:#eaf0f8; --surface:#fff; --surface-2:#f7f9fc; --surface-3:#edf3fb;
+  --border:rgba(13,20,34,.12); --divider:rgba(13,20,34,.08); --text:#141a24; --muted:#5c6679; --faint:#7f889a;
+  --accent:#007f73; --accent-dim:rgba(0,127,115,.1); --accent-hover:#005f55; --tag-bg:rgba(13,20,34,.06);
+  --shadow-md:0 4px 16px rgba(21,30,48,.08); --shadow-lg:0 12px 36px rgba(21,30,48,.12);
+  --core-color:#007f73; --core-bg:rgba(0,127,115,.12); --strong-color:#4255c4; --strong-bg:rgba(66,85,196,.12);
+  --partial-color:#a06a00; --partial-bg:rgba(160,106,0,.12); --weak-color:#c03050; --weak-bg:rgba(192,48,80,.12);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-font-smoothing:antialiased;scroll-behavior:smooth}
+body{font-family:var(--font-body);font-size:var(--text-base);color:var(--text);background:var(--bg);min-height:100dvh;line-height:1.6}
+button,input,select,textarea{font:inherit;color:inherit} button{cursor:pointer;border:none;background:none}
+a{text-decoration:none;color:inherit} textarea,input,select{background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-md);padding:.75rem .9rem;width:100%}
+textarea{min-height:120px;resize:vertical}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.topbar{position:sticky;top:0;z-index:50;height:60px;background:color-mix(in srgb,var(--bg) 90%,transparent);backdrop-filter:blur(12px);border-bottom:1px solid var(--divider);display:flex;align-items:center;gap:var(--space-4);padding:0 var(--space-6)}
+.topbar-logo{display:flex;align-items:center;gap:var(--space-3);font-family:var(--font-display);font-size:var(--text-lg);font-style:italic}
+.logo-dot{width:8px;height:8px;border-radius:999px;background:var(--accent)}
+.topbar-nav{display:flex;gap:var(--space-2);margin-left:var(--space-4)}
+.nav-link,.chip-btn,.mini-btn{padding:.55rem .8rem;border-radius:var(--radius-md);transition:all var(--transition)}
+.nav-link{color:var(--muted)} .nav-link:hover,.chip-btn:hover,.mini-btn:hover{background:var(--tag-bg);color:var(--text)} .nav-link.active{background:var(--accent-dim);color:var(--accent)}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:var(--space-3)}
+.theme-btn,.icon-btn{width:38px;height:38px;border:1px solid var(--border);background:var(--surface-2);border-radius:var(--radius-md);display:grid;place-items:center}
+.layout{display:grid;grid-template-columns:300px minmax(0,1fr) 400px;gap:0;min-height:calc(100dvh - 60px)}
+.sidebar{border-right:1px solid var(--divider);background:var(--bg-2);padding:var(--space-5);overflow:auto}
+.main{padding:var(--space-6);overflow:auto}
+.panel{border-left:1px solid var(--divider);background:var(--bg-2);padding:var(--space-5);overflow:auto}
+.section{display:none}.section.active{display:block}
+.page-header{display:flex;justify-content:space-between;gap:var(--space-4);align-items:end;margin-bottom:var(--space-6)}
+.page-title{font-family:var(--font-display);font-size:var(--text-2xl);font-style:italic}.page-sub{color:var(--muted);margin-top:.3rem}
+.field{display:grid;gap:.45rem;margin-bottom:var(--space-4)} .field label{font-size:var(--text-sm);color:var(--muted);font-weight:600}
+.filter-group{margin-bottom:var(--space-5)} .filter-title{font-size:var(--text-xs);text-transform:uppercase;letter-spacing:.08em;color:var(--faint);margin-bottom:.65rem}
+.filter-chips{display:flex;flex-wrap:wrap;gap:.5rem}.chip-btn{background:var(--surface);border:1px solid var(--border);font-size:var(--text-sm)}.chip-btn.active{background:var(--accent-dim);border-color:transparent;color:var(--accent)}
+.story-list{display:grid;gap:var(--space-4)} .story-grid{grid-template-columns:repeat(auto-fill,minmax(280px,1fr))}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-xl);padding:var(--space-5);box-shadow:var(--shadow-md);transition:transform var(--transition),box-shadow var(--transition),border-color var(--transition)}
+.card:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg)} .card.selected{border-color:var(--accent)}
+.card-top,.meta-row,.inline-actions,.stack-head{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap}
+.card-top{justify-content:space-between;margin-bottom:.75rem}.story-title{font-size:var(--text-lg);font-weight:700}.story-source,.small-muted,.empty-copy{color:var(--muted);font-size:var(--text-sm)}
+.badge{padding:.22rem .55rem;border-radius:999px;font-size:var(--text-xs);font-weight:700;text-transform:uppercase;letter-spacing:.04em}.badge.core{color:var(--core-color);background:var(--core-bg)}.badge.strong{color:var(--strong-color);background:var(--strong-bg)}.badge.partial{color:var(--partial-color);background:var(--partial-bg)}.badge.weak{color:var(--weak-color);background:var(--weak-bg)}
+.tag-row{display:flex;flex-wrap:wrap;gap:.45rem;margin-top:var(--space-3)} .tag{padding:.22rem .5rem;border-radius:999px;background:var(--tag-bg);font-size:var(--text-xs);color:var(--muted)}
+.card p{margin-top:.8rem}
+.segmented{display:flex;gap:.4rem;padding:.25rem;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg)} .seg-btn{padding:.45rem .7rem;border-radius:var(--radius-md);color:var(--muted)} .seg-btn.active{background:var(--surface-3);color:var(--text)}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-4)}
+.table-list{display:grid;gap:.75rem;margin-top:var(--space-4)} .mini-card{padding:.9rem;border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--surface)}
+.toolbar{display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;margin-bottom:var(--space-4)}
+.primary-btn,.secondary-btn,.danger-btn{padding:.75rem 1rem;border-radius:var(--radius-md);font-weight:600;transition:all var(--transition)}
+.primary-btn{background:var(--accent);color:#07221d}.primary-btn:hover{background:var(--accent-hover)} .secondary-btn{background:var(--surface);border:1px solid var(--border)} .danger-btn{background:#7c2438;color:#fff}
+.stack{display:grid;gap:.8rem}.stack-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1rem}.stack-type{font-size:var(--text-xs);text-transform:uppercase;letter-spacing:.08em;color:var(--faint)}
+.notice{padding:1rem;border:1px solid var(--border);background:var(--surface);border-radius:var(--radius-lg);margin-bottom:var(--space-4)}
+.result-count{font-size:var(--text-xs);color:var(--faint)}
+@media (max-width: 1180px){.layout{grid-template-columns:280px minmax(0,1fr)}.panel{grid-column:1 / -1;border-left:none;border-top:1px solid var(--divider)}}
+@media (max-width: 760px){.layout{grid-template-columns:1fr}.sidebar{border-right:none;border-bottom:1px solid var(--divider)}.main,.panel,.sidebar{padding:1rem}.two-col{grid-template-columns:1fr}.topbar{padding:0 1rem}.topbar-nav{overflow:auto;max-width:50vw}}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-logo"><span class="logo-dot"></span><span>StoryMinerPro</span></div>
+  <nav class="topbar-nav">
+    <button class="nav-link active" data-view="library">Library</button>
+    <button class="nav-link" data-view="ingest">Ingest</button>
+    <button class="nav-link" data-view="recombine">Recombine</button>
+  </nav>
+  <div class="topbar-right">
+    <div class="result-count" id="resultCount">0 stories</div>
+    <button class="theme-btn" id="themeBtn" aria-label="Toggle theme">◐</button>
+  </div>
+</header>
+<div class="layout">
+  <aside class="sidebar">
+    <div id="librarySidebar" class="section active">
+      <div class="field"><label for="searchInput">Search</label><input id="searchInput" placeholder="Title, source, tag, tone…"></div>
+      <div class="filter-group">
+        <div class="filter-title">Seed</div>
+        <div class="filter-chips" id="seedChips"></div>
+      </div>
+      <div class="filter-group">
+        <div class="filter-title">Explicitness</div>
+        <div class="filter-chips" id="explicitChips"></div>
+      </div>
+      <div class="filter-group">
+        <div class="filter-title">Band</div>
+        <div class="filter-chips" id="bandChips"></div>
+      </div>
+      <div class="filter-group">
+        <div class="filter-title">Tone</div>
+        <div class="filter-chips" id="toneChips"></div>
+      </div>
+      <div class="toolbar"><button class="secondary-btn" id="clearFiltersBtn">Clear filters</button></div>
+    </div>
+    <div id="ingestSidebar" class="section">
+      <div class="notice">Use this panel to enrich story records, create scene records, and store reusable extractions without breaking the base library dataset.</div>
+      <div class="field"><label for="selectedStoryLabel">Selected story</label><input id="selectedStoryLabel" disabled value="None selected"></div>
+      <div class="segmented" id="ingestTabs">
+        <button class="seg-btn active" data-tab="meta">Meta</button>
+        <button class="seg-btn" data-tab="scenes">Scenes</button>
+        <button class="seg-btn" data-tab="extractions">Extractions</button>
+      </div>
+    </div>
+    <div id="recombineSidebar" class="section">
+      <div class="notice">Build a concept by mixing seed mode, tone, story DNA, scene functions, and extraction modules.</div>
+      <div class="field"><label for="targetSeed">Target seed mode</label><select id="targetSeed"></select></div>
+      <div class="field"><label for="targetTone">Target tone</label><select id="targetTone"></select></div>
+      <div class="field"><label for="targetDNA">Target DNA tag</label><select id="targetDNA"></select></div>
+      <div class="toolbar"><button class="secondary-btn" id="suggestModulesBtn">Suggest modules</button><button class="secondary-btn" id="clearConceptBtn">Clear concept</button></div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <section id="libraryView" class="section active">
+      <div class="page-header">
+        <div><h1 class="page-title">Story Library</h1><p class="page-sub">Browse, filter, and enrich your corpus with StoryMinerPro metadata.</p></div>
+        <div class="segmented"><button class="seg-btn active" id="listViewBtn">List</button><button class="seg-btn" id="gridViewBtn">Grid</button></div>
+      </div>
+      <div id="storyList" class="story-list"></div>
+      <div id="emptyState" class="notice" style="display:none">No stories match the active filters.</div>
+    </section>
+
+    <section id="ingestView" class="section">
+      <div class="page-header"><div><h1 class="page-title">Ingest</h1><p class="page-sub">Add structured metadata, scenes, and extraction modules for the selected story.</p></div></div>
+      <div id="ingestMetaPane" class="ingest-pane">
+        <div class="two-col">
+          <div class="field"><label for="metaScore">Z-style score</label><input id="metaScore" type="number" min="0" max="100" placeholder="0-100"></div>
+          <div class="field"><label for="metaMatchBand">Match band</label><select id="metaMatchBand"><option value="core">core</option><option value="strong">strong</option><option value="partial">partial</option><option value="weak">weak</option></select></div>
+        </div>
+        <div class="two-col">
+          <div class="field"><label for="metaReviewState">Review state</label><select id="metaReviewState"><option value="raw">raw</option><option value="reviewed">reviewed</option><option value="approved">approved</option><option value="rejected">rejected</option></select></div>
+          <div class="field"><label for="metaDNA">DNA tags</label><input id="metaDNA" placeholder="comma-separated, e.g. discovery_arc, slow_burn_escalation"></div>
+        </div>
+        <div class="toolbar"><button class="primary-btn" id="saveMetaBtn">Save story meta</button><button class="secondary-btn" id="recalcScoreBtn">Recalculate score</button></div>
+      </div>
+
+      <div id="ingestScenesPane" class="ingest-pane" style="display:none">
+        <div class="notice">Manual scene ingest: create structured scene records for the selected story.</div>
+        <div class="two-col">
+          <div class="field"><label for="sceneFunction">Scene function</label><input id="sceneFunction" placeholder="setup, escalation, climax, aftermath"></div>
+          <div class="field"><label for="sceneEscalation">Escalation level</label><input id="sceneEscalation" placeholder="low, medium, high"></div>
+        </div>
+        <div class="two-col">
+          <div class="field"><label for="sceneConsent">Consent frame</label><input id="sceneConsent" placeholder="consensual, coercive, ambiguous"></div>
+          <div class="field"><label for="sceneDynamic">Dynamic type</label><input id="sceneDynamic" placeholder="voyeuristic, trainer-trainee, romance"></div>
+        </div>
+        <div class="field"><label for="sceneNote">Scene note</label><textarea id="sceneNote" placeholder="Brief description of the scene and why it matters."></textarea></div>
+        <div class="toolbar"><button class="primary-btn" id="addSceneBtn">Add scene</button></div>
+        <div id="sceneList" class="table-list"></div>
+      </div>
+
+      <div id="ingestExtractionsPane" class="ingest-pane" style="display:none">
+        <div class="notice">Store exact phrasing and paraphrased craft notes as reusable extraction modules.</div>
+        <div class="field"><label for="extractionScene">Scene</label><select id="extractionScene"></select></div>
+        <div class="field"><label for="extractionExact">Exact text</label><textarea id="extractionExact" placeholder="Paste exact source wording"></textarea></div>
+        <div class="field"><label for="extractionReusable">Reusable text</label><textarea id="extractionReusable" placeholder="Paraphrased reusable craft note"></textarea></div>
+        <div class="two-col">
+          <div class="field"><label for="extractionTags">Tags</label><input id="extractionTags" placeholder="throughbend, public-performance"></div>
+          <div class="field"><label for="extractionDNA">DNA tags</label><input id="extractionDNA" placeholder="discovery_arc, male_everyday_pov"></div>
+        </div>
+        <div class="two-col">
+          <div class="field"><label for="extractionPortability">Portability score</label><input id="extractionPortability" type="number" min="0" max="100"></div>
+          <div class="field"><label for="extractionSourceBound">Source-bound score</label><input id="extractionSourceBound" type="number" min="0" max="100"></div>
+        </div>
+        <div class="toolbar"><button class="primary-btn" id="addExtractionBtn">Add extraction</button></div>
+        <div id="extractionList" class="table-list"></div>
+      </div>
+    </section>
+
+    <section id="recombineView" class="section">
+      <div class="page-header"><div><h1 class="page-title">Recombine</h1><p class="page-sub">Assemble a new concept from story, scene, and extraction modules.</p></div></div>
+      <div class="toolbar"><button class="secondary-btn" id="addStoryModuleBtn">Add story match</button><button class="secondary-btn" id="addSceneModuleBtn">Add best scene</button><button class="secondary-btn" id="addExtractionModuleBtn">Add best extraction</button><button class="primary-btn" id="exportConceptMdBtn">Export concept markdown</button></div>
+      <div id="candidateNotice" class="notice">Use the filters in the left sidebar, then add matching modules into the concept stack.</div>
+      <div id="conceptStack" class="stack"></div>
+      <div class="field" style="margin-top:1rem"><label for="conceptOutput">Concept output</label><textarea id="conceptOutput" placeholder="Generated concept markdown or JSON appears here"></textarea></div>
+    </section>
+  </main>
+
+  <aside class="panel">
+    <div class="stack-head"><h2 style="font-size:var(--text-lg)">Workspace</h2></div>
+    <div class="notice">This panel keeps export and persistence safe. Edits happen in memory; use the download buttons to save updated JSON or concept files.</div>
+    <div class="toolbar"><button class="secondary-btn" id="downloadJsonBtn">Download stories.json</button><button class="secondary-btn" id="downloadConceptBtn">Download concept.json</button></div>
+    <div class="field"><label for="selectionSummary">Selection</label><textarea id="selectionSummary" disabled></textarea></div>
+    <div class="field"><label for="debugState">State snapshot</label><textarea id="debugState" disabled></textarea></div>
+  </aside>
+</div>
+
+<script>
+const DATA_URL = './corpus_mined.json';
+const DEFAULT_DATA = {
+  _note: 'Contortion corpus transformed for StoryMinerPro',
+  stories: [],
+  scenes: [],
+  extractions: [],
+  concepts: []
+};
+let DB = structuredClone(DEFAULT_DATA);
+let filteredStories = [];
+let selectedStoryId = null;
+let currentView = 'library';
+let ingestTab = 'meta';
+let listMode = 'list';
+const filters = { search:'', seed:new Set(), explicit:new Set(), band:new Set(), tone:new Set() };
+const conceptState = { targetSeed:'', targetTone:'', targetDNA:'', modules:[] };
+
+const els = {
+  storyList: document.getElementById('storyList'), emptyState: document.getElementById('emptyState'), resultCount: document.getElementById('resultCount'),
+  selectionSummary: document.getElementById('selectionSummary'), debugState: document.getElementById('debugState'), selectedStoryLabel: document.getElementById('selectedStoryLabel'),
+  targetSeed: document.getElementById('targetSeed'), targetTone: document.getElementById('targetTone'), targetDNA: document.getElementById('targetDNA'), conceptStack: document.getElementById('conceptStack'), conceptOutput: document.getElementById('conceptOutput'),
+  sceneList: document.getElementById('sceneList'), extractionList: document.getElementById('extractionList'), extractionScene: document.getElementById('extractionScene')
+};
+
+async function init(){
+  wireUI();
+  const raw = await loadData();
+  transformCorpus(raw);
+  hydrateSelects();
+  renderAll();
+}
+
+async function loadData(){
+  try {
+    const res = await fetch(DATA_URL, { cache:'no-store' });
+    if(!res.ok) throw new Error(`HTTP ${res.status}`);
+    return await res.json();
+  } catch(err) {
+    console.warn('Could not load corpus_mined.json, using empty fallback', err);
+    return [];
+  }
+}
+
+function transformCorpus(corpus){
+  if(!Array.isArray(corpus)) corpus = [];
+  DB = { stories: [], scenes: [], extractions: [], concepts: [] };
+  for(const rawStory of corpus){
+    const storyId = rawStory.storyId || `story-${Math.random()}`;
+    // collect tags from scenes
+    const allTags = new Set();
+    const allDNA = new Set();
+    let totalScore = 0;
+    let maxBand = 'weak';
+    for(const sc of rawStory.scenes || []){
+      if(sc.tags) sc.tags.forEach(t => allTags.add(t));
+      if(sc.dna) allDNA.add(sc.dna);
+      if(typeof sc.score === 'number') totalScore += sc.score;
+      const band = sc.matchBand || sc.band;
+      if(band === 'excellent') maxBand = 'core';
+      else if(band === 'strong' && maxBand !== 'core') maxBand = 'strong';
+      else if(band === 'good' && maxBand === 'weak') maxBand = 'partial';
+    }
+    const avgScore = rawStory.scenes?.length ? Math.round(totalScore / rawStory.scenes.length * 10) : 70;
+    const matchBand = maxBand === 'core' ? 'core' : maxBand === 'strong' ? 'strong' : maxBand === 'partial' ? 'partial' : 'weak';
+    const toneArray = rawStory.toneRegister ? rawStory.toneRegister.split(/[, ]+/).filter(Boolean) : ['sensual'];
+    const story = {
+      id: storyId,
+      title: rawStory.title || 'Untitled',
+      source: rawStory.storyId || 'corpus',
+      author: 'Mined',
+      seed: rawStory.seedMode || 'unknown',
+      explicit: 'erotic',
+      band: matchBand,
+      tags: Array.from(allTags).slice(0, 20),
+      tone: toneArray,
+      words: 0,
+      summary: rawStory.whyItFits || rawStory.title || '',
+      zstyle_score: avgScore,
+      match_band: matchBand,
+      review_state: 'raw',
+      dna: Array.from(allDNA).slice(0, 8),
+      character_energy: rawStory.characterEnergy || ''
+    };
+    DB.stories.push(story);
+
+    // scenes and extractions
+    for(let idx=0; idx<(rawStory.scenes||[]).length; idx++){
+      const sc = rawStory.scenes[idx];
+      const sceneId = `${storyId}-scene-${idx+1}`;
+      const sceneObj = {
+        id: sceneId,
+        story_id: storyId,
+        index: idx+1,
+        portability_score: typeof sc.portability === 'number' ? sc.portability : (sc.score ? sc.score : null),
+        function: sc.poseFamily || '',
+        escalation_level: sc.tags?.includes('slow-stretch') ? 'high' : (sc.tags?.includes('progressive') ? 'medium' : ''),
+        consent_frame: 'consensual',
+        dynamic_type: story.character_energy || '',
+        note: sc.reusableWording || sc.exactWording || '',
+        exactWording: sc.exactWording || '',
+        reusableWording: sc.reusableWording || '',
+        poseFamily: sc.poseFamily || '',
+        tags: sc.tags || [],
+        dna: sc.dna || ''
+      };
+      DB.scenes.push(sceneObj);
+
+      // extraction record
+      const extraction = {
+        id: `${sceneId}-extract`,
+        story_id: storyId,
+        scene_id: sceneId,
+        exact_text: sc.exactWording || '',
+        reusable_text: sc.reusableWording || '',
+        portability_score: typeof sc.portability === 'number' ? sc.portability : null,
+        source_bound_score: null,
+        tags: sc.tags || [],
+        dna: sc.dna ? [sc.dna] : [],
+        review_state: 'raw'
+      };
+      DB.extractions.push(extraction);
+    }
+  }
+}
+
+function wireUI(){
+  document.querySelectorAll('.nav-link').forEach(btn => btn.addEventListener('click', () => setView(btn.dataset.view)));
+  document.getElementById('themeBtn').addEventListener('click', toggleTheme);
+  document.getElementById('searchInput').addEventListener('input', e => { filters.search = e.target.value.trim().toLowerCase(); renderLibrary(); });
+  document.getElementById('clearFiltersBtn').addEventListener('click', clearFilters);
+  document.getElementById('listViewBtn').addEventListener('click', () => setListMode('list'));
+  document.getElementById('gridViewBtn').addEventListener('click', () => setListMode('grid'));
+  document.querySelectorAll('#ingestTabs .seg-btn').forEach(btn => btn.addEventListener('click', () => setIngestTab(btn.dataset.tab)));
+  document.getElementById('saveMetaBtn').addEventListener('click', saveStoryMeta);
+  document.getElementById('recalcScoreBtn').addEventListener('click', recalcScore);
+  document.getElementById('addSceneBtn').addEventListener('click', addScene);
+  document.getElementById('addExtractionBtn').addEventListener('click', addExtraction);
+  document.getElementById('downloadJsonBtn').addEventListener('click', () => downloadBlob('stories.json', JSON.stringify(DB, null, 2), 'application/json'));
+  document.getElementById('downloadConceptBtn').addEventListener('click', downloadConceptJson);
+  document.getElementById('suggestModulesBtn').addEventListener('click', suggestModules);
+  document.getElementById('clearConceptBtn').addEventListener('click', () => { conceptState.modules = []; renderConceptStack(); });
+  document.getElementById('addStoryModuleBtn').addEventListener('click', addBestStoryModule);
+  document.getElementById('addSceneModuleBtn').addEventListener('click', addBestSceneModule);
+  document.getElementById('addExtractionModuleBtn').addEventListener('click', addBestExtractionModule);
+  document.getElementById('exportConceptMdBtn').addEventListener('click', exportConceptMarkdown);
+  ['targetSeed','targetTone','targetDNA'].forEach(id => document.getElementById(id).addEventListener('change', syncConceptTargets));
+}
+
+function hydrateSelects(){
+  hydrateFilterChips();
+  const seeds = unique(DB.stories.map(s => s.seed));
+  const tones = unique(DB.stories.flatMap(s => s.tone));
+  fillSelect(els.targetSeed, [''].concat(seeds), 'Any seed');
+  fillSelect(els.targetTone, [''].concat(tones), 'Any tone');
+  const allDNA = new Set();
+  DB.stories.forEach(s => s.dna.forEach(d => allDNA.add(d)));
+  DB.extractions.forEach(e => e.dna.forEach(d => allDNA.add(d)));
+  fillSelect(els.targetDNA, [''].concat(Array.from(allDNA).sort()), 'Any DNA');
+}
+
+function hydrateFilterChips(){
+  makeChipGroup('seedChips', unique(DB.stories.map(s => s.seed)), filters.seed);
+  makeChipGroup('explicitChips', unique(DB.stories.map(s => s.explicit)), filters.explicit);
+  makeChipGroup('bandChips', unique(DB.stories.map(s => s.band)), filters.band);
+  makeChipGroup('toneChips', unique(DB.stories.flatMap(s => s.tone)), filters.tone);
+}
+
+function makeChipGroup(id, items, targetSet){
+  const el = document.getElementById(id); el.innerHTML = '';
+  items.forEach(item => {
+    const btn = document.createElement('button');
+    btn.className = 'chip-btn'; btn.textContent = labelize(item);
+    btn.addEventListener('click', () => { targetSet.has(item) ? targetSet.delete(item) : targetSet.add(item); btn.classList.toggle('active'); renderLibrary(); });
+    if(targetSet.has(item)) btn.classList.add('active');
+    el.appendChild(btn);
+  });
+}
+
+function setView(view){
+  currentView = view;
+  document.querySelectorAll('.nav-link').forEach(btn => btn.classList.toggle('active', btn.dataset.view === view));
+  ['library','ingest','recombine'].forEach(name => {
+    document.getElementById(`${name}View`).classList.toggle('active', name === view);
+    document.getElementById(`${name}Sidebar`).classList.toggle('active', name === view);
+  });
+  updateWorkspace();
+}
+
+function setListMode(mode){
+  listMode = mode;
+  document.getElementById('listViewBtn').classList.toggle('active', mode === 'list');
+  document.getElementById('gridViewBtn').classList.toggle('active', mode === 'grid');
+  renderLibrary();
+}
+
+function setIngestTab(tab){
+  ingestTab = tab;
+  document.querySelectorAll('#ingestTabs .seg-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.tab === tab));
+  document.getElementById('ingestMetaPane').style.display = tab === 'meta' ? 'block' : 'none';
+  document.getElementById('ingestScenesPane').style.display = tab === 'scenes' ? 'block' : 'none';
+  document.getElementById('ingestExtractionsPane').style.display = tab === 'extractions' ? 'block' : 'none';
+}
+
+function clearFilters(){ filters.search=''; filters.seed.clear(); filters.explicit.clear(); filters.band.clear(); filters.tone.clear(); document.getElementById('searchInput').value=''; hydrateFilterChips(); renderLibrary(); }
+
+function getFilteredStories(){
+  return DB.stories.filter(story => {
+    const hay = `${story.title} ${story.source} ${story.summary} ${story.tags.join(' ')} ${story.tone.join(' ')} ${story.dna.join(' ')}`.toLowerCase();
+    if (filters.search && !hay.includes(filters.search)) return false;
+    if (filters.seed.size && !filters.seed.has(story.seed)) return false;
+    if (filters.explicit.size && !filters.explicit.has(story.explicit)) return false;
+    if (filters.band.size && !filters.band.has(story.band)) return false;
+    if (filters.tone.size && !story.tone.some(t => filters.tone.has(t))) return false;
+    return true;
+  });
+}
+
+function renderLibrary(){
+  filteredStories = getFilteredStories();
+  els.storyList.className = listMode === 'grid' ? 'story-list story-grid' : 'story-list';
+  els.storyList.innerHTML = '';
+  els.emptyState.style.display = filteredStories.length ? 'none' : 'block';
+  filteredStories.forEach(story => els.storyList.appendChild(renderStoryCard(story)));
+  els.resultCount.textContent = `${filteredStories.length} stories`;
+  updateWorkspace();
+}
+
+function renderStoryCard(story){
+  const card = document.createElement('article');
+  card.className = 'card' + (story.id === selectedStoryId ? ' selected' : '');
+  const scoreText = story.zstyle_score == null ? 'unscored' : `${story.zstyle_score}/100`;
+  card.innerHTML = `
+    <div class="card-top">
+      <div>
+        <div class="story-title">${escapeHtml(story.title)}</div>
+        <div class="story-source">${escapeHtml(story.source)} · ${escapeHtml(story.author)}</div>
+      </div>
+      <div class="inline-actions">
+        <span class="badge ${escapeHtml(story.match_band)}">${escapeHtml(story.match_band)}</span>
+        <span class="small-muted">${scoreText}</span>
+      </div>
+    </div>
+    <div class="meta-row small-muted">Seed: ${escapeHtml(story.seed)} · Explicit: ${escapeHtml(story.explicit)} · Review: ${escapeHtml(story.review_state)}</div>
+    <p>${escapeHtml(story.summary)}</p>
+    <div class="tag-row">${story.tags.slice(0,6).map(tag => `<span class="tag">${escapeHtml(tag)}</span>`).join('')}</div>
+    <div class="tag-row">${story.dna.slice(0,4).map(tag => `<span class="tag">DNA: ${escapeHtml(tag)}</span>`).join('')}</div>
+  `;
+  card.addEventListener('click', () => selectStory(story.id));
+  return card;
+}
+
+function selectStory(storyId){
+  selectedStoryId = storyId;
+  const story = getSelectedStory();
+  els.selectedStoryLabel.value = story ? `${story.title} (${story.id})` : 'None selected';
+  populateMetaForm();
+  renderLibrary();
+  renderScenes();
+  renderExtractions();
+  renderExtractionSceneSelect();
+  updateWorkspace();
+}
+
+function getSelectedStory(){ return DB.stories.find(s => s.id === selectedStoryId) || null; }
+
+function populateMetaForm(){
+  const story = getSelectedStory();
+  document.getElementById('metaScore').value = story?.zstyle_score ?? '';
+  document.getElementById('metaMatchBand').value = story?.match_band || 'partial';
+  document.getElementById('metaReviewState').value = story?.review_state || 'raw';
+  document.getElementById('metaDNA').value = (story?.dna || []).join(', ');
+}
+
+function saveStoryMeta(){
+  const story = getSelectedStory(); if(!story) return alert('Select a story first.');
+  story.zstyle_score = valueOrNull(document.getElementById('metaScore').value);
+  story.match_band = document.getElementById('metaMatchBand').value;
+  story.review_state = document.getElementById('metaReviewState').value;
+  story.dna = splitCsv(document.getElementById('metaDNA').value);
+  renderAll();
+}
+
+function recalcScore(){
+  const story = getSelectedStory(); if(!story) return alert('Select a story first.');
+  const scenes = DB.scenes.filter(s => s.story_id === story.id);
+  const extractions = DB.extractions.filter(e => e.story_id === story.id);
+  let score = 20;
+  if(story.seed === 'zlata') score += 18;
+  score += Math.min(story.tags.length * 2, 16);
+  score += Math.min(story.tone.length * 2, 10);
+  score += Math.min((story.dna || []).length * 4, 20);
+  score += Math.min(scenes.length * 5, 15);
+  score += Math.min(extractions.length * 4, 16);
+  if (story.tone.includes('warm')) score += 4;
+  if (story.tone.includes('voyeuristic')) score += 4;
+  score = Math.max(0, Math.min(100, score));
+  story.zstyle_score = score;
+  story.match_band = score >= 85 ? 'core' : score >= 65 ? 'strong' : score >= 40 ? 'partial' : 'weak';
+  populateMetaForm();
+  renderAll();
+}
+
+function addScene(){
+  const story = getSelectedStory(); if(!story) return alert('Select a story first.');
+  const scene = {
+    id: `scene-${Date.now()}`,
+    story_id: story.id,
+    index: DB.scenes.filter(s => s.story_id === story.id).length + 1,
+    portability_score: null,
+    function: document.getElementById('sceneFunction').value.trim(),
+    escalation_level: document.getElementById('sceneEscalation').value.trim(),
+    consent_frame: document.getElementById('sceneConsent').value.trim(),
+    dynamic_type: document.getElementById('sceneDynamic').value.trim(),
+    note: document.getElementById('sceneNote').value.trim()
+  };
+  if(!scene.function && !scene.note) return alert('Add at least a scene function or note.');
+  DB.scenes.push(scene);
+  ['sceneFunction','sceneEscalation','sceneConsent','sceneDynamic','sceneNote'].forEach(id => document.getElementById(id).value = '');
+  renderScenes(); renderExtractionSceneSelect(); updateWorkspace();
+}
+
+function renderScenes(){
+  const story = getSelectedStory();
+  const scenes = story ? DB.scenes.filter(s => s.story_id === story.id).sort((a,b) => a.index - b.index) : [];
+  els.sceneList.innerHTML = scenes.length ? '' : '<div class="empty-copy">No scenes yet for the selected story.</div>';
+  scenes.forEach(scene => {
+    const item = document.createElement('div'); item.className='mini-card';
+    item.innerHTML = `<div class="small-muted">Scene ${scene.index}</div><strong>${escapeHtml(scene.function || 'Untitled scene')}</strong><div class="small-muted">${escapeHtml(scene.escalation_level || 'no escalation')} · ${escapeHtml(scene.consent_frame || 'no consent frame')} · ${escapeHtml(scene.dynamic_type || 'no dynamic')}</div><p>${escapeHtml(scene.note || '')}</p>`;
+    els.sceneList.appendChild(item);
+  });
+}
+
+function renderExtractionSceneSelect(){
+  const story = getSelectedStory();
+  const scenes = story ? DB.scenes.filter(s => s.story_id === story.id).sort((a,b) => a.index - b.index) : [];
+  els.extractionScene.innerHTML = scenes.length ? '' : '<option value="">No scenes available</option>';
+  scenes.forEach(scene => {
+    const opt = document.createElement('option'); opt.value = scene.id; opt.textContent = `Scene ${scene.index}: ${scene.function || 'Untitled'}`; els.extractionScene.appendChild(opt);
+  });
+}
+
+function addExtraction(){
+  const story = getSelectedStory(); if(!story) return alert('Select a story first.');
+  const extraction = {
+    id: `extract-${Date.now()}`,
+    story_id: story.id,
+    scene_id: document.getElementById('extractionScene').value || '',
+    exact_text: document.getElementById('extractionExact').value.trim(),
+    reusable_text: document.getElementById('extractionReusable').value.trim(),
+    portability_score: valueOrNull(document.getElementById('extractionPortability').value),
+    source_bound_score: valueOrNull(document.getElementById('extractionSourceBound').value),
+    tags: splitCsv(document.getElementById('extractionTags').value),
+    dna: splitCsv(document.getElementById('extractionDNA').value),
+    review_state: 'raw'
+  };
+  if(!extraction.exact_text && !extraction.reusable_text) return alert('Add exact or reusable text.');
+  DB.extractions.push(extraction);
+  ['extractionExact','extractionReusable','extractionPortability','extractionSourceBound','extractionTags','extractionDNA'].forEach(id => document.getElementById(id).value = '');
+  renderExtractions(); updateWorkspace();
+}
+
+function renderExtractions(){
+  const story = getSelectedStory();
+  const extractions = story ? DB.extractions.filter(e => e.story_id === story.id) : [];
+  els.extractionList.innerHTML = extractions.length ? '' : '<div class="empty-copy">No extractions yet for the selected story.</div>';
+  extractions.forEach(ex => {
+    const item = document.createElement('div'); item.className='mini-card';
+    item.innerHTML = `<div class="small-muted">Portability: ${ex.portability_score ?? '—'} · Source-bound: ${ex.source_bound_score ?? '—'}</div><strong>${escapeHtml((ex.reusable_text || ex.exact_text).slice(0,90))}</strong><p>${escapeHtml(ex.reusable_text || ex.exact_text)}</p><div class="tag-row">${ex.tags.map(tag => `<span class="tag">${escapeHtml(tag)}</span>`).join('')}${ex.dna.map(tag => `<span class="tag">DNA: ${escapeHtml(tag)}</span>`).join('')}</div>`;
+    els.extractionList.appendChild(item);
+  });
+}
+
+function syncConceptTargets(){
+  conceptState.targetSeed = els.targetSeed.value;
+  conceptState.targetTone = els.targetTone.value;
+  conceptState.targetDNA = els.targetDNA.value;
+  updateWorkspace();
+}
+
+function suggestModules(){
+  conceptState.modules = [];
+  addBestStoryModule();
+  addBestSceneModule();
+  addBestExtractionModule();
+  renderConceptStack();
+}
+
+function scoreStoryForConcept(story){
+  let score = 0;
+  if (conceptState.targetSeed && story.seed === conceptState.targetSeed) score += 4;
+  if (conceptState.targetTone && story.tone.includes(conceptState.targetTone)) score += 3;
+  if (conceptState.targetDNA && story.dna.includes(conceptState.targetDNA)) score += 4;
+  if (story.zstyle_score) score += story.zstyle_score / 20;
+  return score;
+}
+
+function addBestStoryModule(){
+  const pool = getFilteredStories(); if(!pool.length) return;
+  const best = [...pool].sort((a,b) => scoreStoryForConcept(b) - scoreStoryForConcept(a))[0];
+  if(!best) return;
+  pushModule({ type:'story', ref:best.id, title:best.title, detail:`${best.seed} · ${best.match_band} · ${best.source}`, payload:best });
+}
+
+function addBestSceneModule(){
+  let scenes = DB.scenes.map(scene => ({...scene, story: DB.stories.find(s => s.id === scene.story_id)})).filter(Boolean);
+  if(conceptState.targetSeed) scenes = scenes.filter(s => s.story?.seed === conceptState.targetSeed);
+  if(conceptState.targetTone) scenes = scenes.filter(s => s.story?.tone.includes(conceptState.targetTone));
+  const best = scenes[0];
+  if(!best) return;
+  pushModule({ type:'scene', ref:best.id, title:best.function || `Scene ${best.index}`, detail:`${best.story?.title || ''} · ${best.escalation_level || 'unspecified'}`, payload:best });
+}
+
+function addBestExtractionModule(){
+  let exs = DB.extractions.map(ex => ({...ex, story: DB.stories.find(s => s.id === ex.story_id)})).filter(Boolean);
+  if(conceptState.targetSeed) exs = exs.filter(e => e.story?.seed === conceptState.targetSeed);
+  if(conceptState.targetTone) exs = exs.filter(e => e.story?.tone.includes(conceptState.targetTone));
+  if(conceptState.targetDNA) exs = exs.filter(e => e.dna.includes(conceptState.targetDNA) || e.story?.dna.includes(conceptState.targetDNA));
+  exs.sort((a,b) => (b.portability_score || 0) - (a.portability_score || 0));
+  const best = exs[0];
+  if(!best) return;
+  pushModule({ type:'extraction', ref:best.id, title:(best.reusable_text || best.exact_text).slice(0,80), detail:`${best.story?.title || ''} · portability ${best.portability_score ?? '—'}`, payload:best });
+}
+
+function pushModule(module){
+  const exists = conceptState.modules.some(m => m.type === module.type && m.ref === module.ref);
+  if(!exists) conceptState.modules.push(module);
+  renderConceptStack();
+}
+
+function renderConceptStack(){
+  els.conceptStack.innerHTML = '';
+  if(!conceptState.modules.length){ els.conceptStack.innerHTML = '<div class="notice">No modules in the concept stack yet.</div>'; updateWorkspace(); return; }
+  conceptState.modules.forEach((module, idx) => {
+    const div = document.createElement('div'); div.className='stack-item';
+    div.innerHTML = `<div class="stack-type">${module.type}</div><strong>${escapeHtml(module.title)}</strong><div class="small-muted">${escapeHtml(module.detail)}</div><div class="toolbar" style="margin-top:.7rem"><button class="mini-btn secondary-btn" data-remove="${idx}">Remove</button></div>`;
+    div.querySelector('[data-remove]').addEventListener('click', () => { conceptState.modules.splice(idx,1); renderConceptStack(); });
+    els.conceptStack.appendChild(div);
+  });
+  updateWorkspace();
+}
+
+function exportConceptMarkdown(){
+  const concept = buildConceptObject();
+  const md = `# ${concept.working_title}\n\n- Seed mode: ${concept.target_seed_mode || 'unspecified'}\n- Tone target: ${concept.target_tone || 'unspecified'}\n- DNA target: ${concept.dna_target || 'unspecified'}\n\n## Character / energy\n${concept.character || 'No character module selected.'}\n\n## Story scaffold\n${concept.story_scaffold || 'No story scaffold selected.'}\n\n## Scene beat\n${concept.scene_beat || 'No scene module selected.'}\n\n## Pose / extraction setpiece\n${concept.pose_setpiece || 'No extraction module selected.'}\n\n## Notes\n${concept.notes}`;
+  els.conceptOutput.value = md;
+  updateWorkspace();
+}
+
+function buildConceptObject(){
+  const story = conceptState.modules.find(m => m.type === 'story')?.payload;
+  const scene = conceptState.modules.find(m => m.type === 'scene')?.payload;
+  const extraction = conceptState.modules.find(m => m.type === 'extraction')?.payload;
+  return {
+    working_title: story ? `Concept from ${story.title}` : 'Untitled concept',
+    target_seed_mode: conceptState.targetSeed || story?.seed || '',
+    target_tone: conceptState.targetTone || '',
+    dna_target: conceptState.targetDNA || '',
+    selected_modules: conceptState.modules.map(m => ({ type:m.type, ref:m.ref, title:m.title })),
+    character: story ? `${story.title} suggests a ${story.seed} mode with ${story.tone.join(', ') || 'unspecified'} tone.` : '',
+    story_scaffold: story ? story.summary : '',
+    scene_beat: scene ? `${scene.function || 'Scene'} — ${scene.note || ''}` : '',
+    pose_setpiece: extraction ? (extraction.reusable_text || extraction.exact_text || '') : '',
+    notes: 'This concept was assembled inside StoryMinerPro vNext from story, scene, and extraction modules.'
+  };
+}
+
+function downloadConceptJson(){
+  const concept = buildConceptObject();
+  downloadBlob('concept.json', JSON.stringify(concept, null, 2), 'application/json');
+}
+
+function downloadBlob(filename, text, type='text/plain'){
+  const blob = new Blob([text], { type });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = filename; a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function renderAll(){ renderLibrary(); populateMetaForm(); renderScenes(); renderExtractionSceneSelect(); renderExtractions(); renderConceptStack(); updateWorkspace(); }
+
+function updateWorkspace(){
+  const story = getSelectedStory();
+  els.selectionSummary.value = story ? JSON.stringify({ id:story.id, title:story.title, seed:story.seed, zstyle_score:story.zstyle_score, match_band:story.match_band, dna:story.dna, scenes: DB.scenes.filter(s => s.story_id === story.id).length, extractions: DB.extractions.filter(e => e.story_id === story.id).length }, null, 2) : 'No story selected';
+  els.debugState.value = JSON.stringify({ currentView, ingestTab, listMode, filters:{ search:filters.search, seed:[...filters.seed], explicit:[...filters.explicit], band:[...filters.band], tone:[...filters.tone] }, conceptTargets:{ seed:conceptState.targetSeed, tone:conceptState.targetTone, dna:conceptState.targetDNA }, conceptModules: conceptState.modules.map(m => ({ type:m.type, ref:m.ref })) }, null, 2);
+}
+
+function fillSelect(el, values, placeholder){ el.innerHTML=''; values.forEach((value, idx) => { const opt = document.createElement('option'); opt.value = value; opt.textContent = idx===0 && value==='' ? placeholder : labelize(value); el.appendChild(opt); }); }
+function unique(arr){ return [...new Set(arr.filter(Boolean))].sort((a,b) => String(a).localeCompare(String(b))); }
+function splitCsv(str){ return str.split(',').map(s => s.trim()).filter(Boolean); }
+function valueOrNull(v){ return v === '' ? null : Number(v); }
+function labelize(str){ return String(str).replaceAll('-', ' ').replaceAll('_', ' '); }
+function escapeHtml(str){ return String(str ?? '').replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s])); }
+function toggleTheme(){ const root = document.documentElement; root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark'; }
+
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zlata Story Generator v2 • Variable Collector + Inspiration</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: system-ui; }
+    .image-grid img { transition: all 0.2s; }
+    .image-grid img:hover { transform: scale(1.05); box-shadow: 0 0 0 3px rgb(16 185 129); }
+  </style>
+</head>
+<body class="bg-zinc-950 text-zinc-100 min-h-screen">
+  <div class="max-w-5xl mx-auto p-8">
+    <h1 class="text-4xl font-bold mb-2 flex items-center gap-3">
+      Zlata-Style Erotic Contortion Generator <span class="text-emerald-400 text-2xl">v2</span>
+    </h1>
+    <p class="text-emerald-400 mb-8">Core Rules locked • Multi-variable collection • Rich image inspiration • Ready for Claude/Grok generation</p>
+
+    <form id="generatorForm" class="space-y-10">
+      <!-- 1. Basics -->
+      <div class="bg-zinc-900 p-6 rounded-3xl">
+        <h2 class="text-xl font-semibold mb-4">1. Core Setup</h2>
+        <div class="grid grid-cols-2 gap-6">
+          <div>
+            <label class="block text-sm mb-1">Protagonist</label>
+            <input id="protagonist" type="text" value="normal guy / journalist / bailiff / yoga enthusiast" class="w-full bg-zinc-800 border border-zinc-700 rounded-2xl px-4 py-3">
+          </div>
+          <div>
+            <label class="block text-sm mb-1">Heroine Background</label>
+            <input id="heroine" type="text" value="former rhythmic gymnast / circus contortionist / yoga teacher / shy flexible girl" class="w-full bg-zinc-800 border border-zinc-700 rounded-2xl px-4 py-3">
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. Setting & Tone -->
+      <div class="bg-zinc-900 p-6 rounded-3xl">
+        <h2 class="text-xl font-semibold mb-4">2. Setting, Tone & Length</h2>
+        <div class="grid grid-cols-3 gap-6">
+          <div>
+            <label class="block text-sm mb-1">Setting</label>
+            <input id="setting" type="text" value="nightclub / home apartment / holiday hotel room / garden party" class="w-full bg-zinc-800 border border-zinc-700 rounded-2xl px-4 py-3">
+          </div>
+          <div>
+            <label class="block text-sm mb-1">Tone & Explicitness</label>
+            <select id="tone" class="w-full bg-zinc-800 border border-zinc-700 rounded-2xl px-4 py-3">
+              <option value="soft sensual">Soft sensual build-up</option>
+              <option value="warm romantic" selected>Warm romantic + explicit</option>
+              <option value="highly explicit">Highly explicit (Lana Part 3 level)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm mb-1">Length</label>
+            <select id="length" class="w-full bg-zinc-800 border border-zinc-700 rounded-2xl px-4 py-3">
+              <option value="short ~2000 words">Short (~2,000 words)</option>
+              <option value="medium ~4000 words" selected>Medium (~4,000 words)</option>
+              <option value="long multi-part series">Long / Multi-part series</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. Flexibility Elements -->
+      <div class="bg-zinc-900 p-6 rounded-3xl">
+        <h2 class="text-xl font-semibold mb-4">3. Flexibility & Passive Training</h2>
+        <textarea id="positions" rows="4" class="w-full bg-zinc-800 border border-zinc-700 rounded-3xl px-4 py-3" placeholder="Specific positions to feature (e.g. through-bend on top, four-poster ribbon 270° oversplit, passive triple fold, shoulder dislocation while being pushed...)"></textarea>
+        
+        <div class="mt-6">
+          <label class="block text-sm mb-2">Passive Training Level</label>
+          <div class="flex gap-4">
+            <label class="flex-1"><input type="radio" name="training" value="none" class="mr-2"> None</label>
+            <label class="flex-1"><input type="radio" name="training" value="light" checked class="mr-2"> Light invitation (she asks to be pushed)</label>
+            <label class="flex-1"><input type="radio" name="training" value="heavy"> Heavy assisted (detailed passive stretching)</label>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. Special Elements -->
+      <div class="bg-zinc-900 p-6 rounded-3xl">
+        <h2 class="text-xl font-semibold mb-4">4. Special Mood / Elements</h2>
+        <textarea id="special" rows="2" class="w-full bg-zinc-800 border border-zinc-700 rounded-3xl px-4 py-3" placeholder="e.g. tantric elements like Bent for Each Other, voyeuristic like Garden Party, warm comedy like Addicted to Contortion, slow discovery like Lana..."></textarea>
+      </div>
+
+      <!-- 5. Inspiration Gallery + Upload -->
+      <div class="bg-zinc-900 p-6 rounded-3xl">
+        <h2 class="text-xl font-semibold mb-4">5. Visual Inspiration (Zlata & Similar Contortionists)</h2>
+        
+        <!-- Built-in Zlata Gallery -->
+        <div class="mb-6">
+          <p class="text-sm text-emerald-400 mb-3">Quick-add Zlata golden catsuit poses:</p>
+          <div class="image-grid grid grid-cols-3 md:grid-cols-6 gap-3">
+            <img onclick="addPresetImage(this.src)" src="https://i.dailymail.co.uk/i/pix/2014/12/23/243C320600000578-2884833-Unsurprisingly_Zlata_has_won_awards_and_holds_world_records_for_-a-13_1419334492975.jpg" class="cursor-pointer rounded-2xl border border-transparent hover:border-emerald-500">
+            <img onclick="addPresetImage(this.src)" src="https://i.dailymail.co.uk/i/pix/2014/12/23/243C321A00000578-2884833-Russian_born_Zlata_twists_herself_into_the_most_extreme_poses_im-a-14_1419334492987.jpg" class="cursor-pointer rounded-2xl border border-transparent hover:border-emerald-500">
+            <img onclick="addPresetImage(this.src)" src="https://i.dailymail.co.uk/i/pix/2014/12/23/243C325200000578-2884833-The_dramatic_shoot_is_for_the_2015_version_of_her_annual_calende-a-16_1419334493003.jpg" class="cursor-pointer rounded-2xl border border-transparent hover:border-emerald-500">
+            <img onclick="addPresetImage(this.src)" src="https://i.dailymail.co.uk/i/pix/2014/12/23/243C334200000578-2884833-The_dramatic_snaps_see_her_wrapping_her_legs_around_her_head_and-a-15_1419334492996.jpg" class="cursor-pointer rounded-2xl border border-transparent hover:border-emerald-500">
+            <img onclick="addPresetImage(this.src)" src="https://i.dailymail.co.uk/i/pix/2014/12/23/243C338200000578-2884833-The_28_year_old_real_name_Julia_Guenthel_has_been_contorting_sin-a-20_1419334493029.jpg" class="cursor-pointer rounded-2xl border border-transparent hover:border-emerald-500">
+            <img onclick="addPresetImage(this.src)" src="https://i.dailymail.co.uk/i/pix/2014/12/23/243C32D600000578-2884833-Zlata_is_seemingly_totally_un_phased_by_the_unbelievable_shapes_-a-22_1419334493042.jpg" class="cursor-pointer rounded-2xl border border-transparent hover:border-emerald-500">
+          </div>
+        </div>
+
+        <!-- User Upload / URL -->
+        <div class="flex gap-4">
+          <input id="imageUrl" type="text" placeholder="Paste any contortion image URL" class="flex-1 bg-zinc-800 border border-zinc-700 rounded-2xl px-4 py-3">
+          <button type="button" onclick="addCustomUrl()" class="bg-emerald-600 hover:bg-emerald-500 px-8 rounded-2xl font-medium">Add URL</button>
+        </div>
+        <input id="imageUpload" type="file" accept="image/*" multiple class="mt-4 block w-full text-sm text-zinc-400 file:mr-4 file:py-3 file:px-6 file:rounded-2xl file:border-0 file:bg-emerald-600 file:text-white">
+
+        <div id="imagePreview" class="mt-8 grid grid-cols-3 md:grid-cols-5 gap-4"></div>
+      </div>
+    </form>
+
+    <div class="flex gap-4 mt-12">
+      <button onclick="generatePrompt()" class="flex-1 bg-emerald-600 hover:bg-emerald-500 py-6 rounded-3xl font-semibold text-xl">Generate Full Mixed Prompt (A+B+C)</button>
+      <button onclick="startInteractive()" class="flex-1 border-2 border-emerald-500 hover:bg-emerald-500/10 py-6 rounded-3xl font-semibold text-xl">Start Interactive Writer Session</button>
+    </div>
+
+    <pre id="output" class="mt-10 bg-black p-8 rounded-3xl text-emerald-300 whitespace-pre-wrap text-sm hidden overflow-auto max-h-96"></pre>
+  </div>
+
+  <script>
+    // Add preset Zlata image
+    function addPresetImage(src) {
+      renderImage(src);
+    }
+
+    function addCustomUrl() {
+      const url = document.getElementById('imageUrl').value.trim();
+      if (url) {
+        renderImage(url);
+        document.getElementById('imageUrl').value = '';
+      }
+    }
+
+    function handleUpload(e) {
+      const files = e.target.files;
+      for (let file of files) {
+        const reader = new FileReader();
+        reader.onload = ev => renderImage(ev.target.result);
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function renderImage(src) {
+      const container = document.getElementById('imagePreview');
+      const div = document.createElement('div');
+      div.className = 'relative group';
+      div.innerHTML = `
+        <img src="${src}" class="w-full aspect-square object-cover rounded-2xl border border-emerald-500">
+        <button onclick="this.parentElement.remove()" class="absolute top-2 right-2 bg-red-600 text-white text-xs px-2 py-1 rounded-full opacity-0 group-hover:opacity-100">Remove</button>
+      `;
+      container.appendChild(div);
+    }
+
+    document.getElementById('imageUpload').addEventListener('change', handleUpload);
+
+    function generatePrompt() {
+      const data = {
+        protagonist: document.getElementById('protagonist').value,
+        heroine: document.getElementById('heroine').value,
+        setting: document.getElementById('setting').value,
+        tone: document.getElementById('tone').value,
+        length: document.getElementById('length').value,
+        positions: document.getElementById('positions').value,
+        training: document.querySelector('input[name="training"]:checked').value,
+        special: document.getElementById('special').value,
+        images: Array.from(document.getElementById('imagePreview').querySelectorAll('img')).map(img => img.src)
+      };
+
+      const promptText = `You are the world’s best Zlata-style erotic contortion fiction writer. Follow CORE RULES strictly.
+
+CORE RULES:
+- Everyday/normal guy discovers or is amazed by a hyper-flexible woman.
+- Extremely detailed, sensual, anatomically precise descriptions of extreme contortion.
+- Warm, consensual, romantic/erotic tone — the woman actively enjoys being watched and pushed deeper.
+- Strong character chemistry and fascination build-up.
+
+USER VARIABLES:
+- Protagonist: ${data.protagonist}
+- Heroine: ${data.heroine}
+- Setting: ${data.setting}
+- Tone & Explicitness: ${data.tone}
+- Length: ${data.length}
+- Key Positions: ${data.positions || 'any extreme contortion that fits the scene'}
+- Passive Training Level: ${data.training}
+- Special Elements: ${data.special || 'none'}
+
+Visual Inspiration (describe these poses naturally and sensually in the story where appropriate):
+${data.images.join('\n') || 'Use classic golden catsuit Zlata-style imagery for body description'}
+
+Write the story in perfect Zlata house style (Lana Part 3 detail level, Dreamgirl fascination, Open Invoice passive training warmth, Bent for Each Other romance). Make flexibility the erotic core.`;
+
+      const output = document.getElementById('output');
+      output.textContent = promptText;
+      output.classList.remove('hidden');
+      output.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function startInteractive() {
+      const output = document.getElementById('output');
+      output.textContent = `You are now my permanent Zlata-Style Fiction Co-Writer (using the variables from the form above).
+
+Core Rules are locked. We will build interactively:
+1. Write the opening 800–1200 words in perfect Zlata style.
+2. Ask me exactly three targeted questions for the next section.
+3. Continue chapter-by-chapter.
+
+Ready — give me the first story title or premise.`;
+      output.classList.remove('hidden');
+    }
+
+    // Auto-save
+    window.addEventListener('load', () => {
+      const form = document.getElementById('generatorForm');
+      form.addEventListener('input', () => {
+        const data = {};
+        ['protagonist','heroine','setting','positions','special'].forEach(k => {
+          const el = document.getElementById(k);
+          if (el) data[k] = el.value;
+        });
+        localStorage.setItem('zlataFormData', JSON.stringify(data));
+      });
+    });
+  </script>
+</body>
+</html>

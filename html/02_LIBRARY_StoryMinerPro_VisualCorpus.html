@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<title>StoryMinerPro – Contortion Corpus • Visual</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300..700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0d1016;--surface:#161b24;--accent:#70dfcb;--text:#edf2f8;--muted:#a9b4c7;--border:rgba(255,255,255,.1);--radius-lg:12px;--transition:180ms cubic-bezier(0.16,1,0.3,1);}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;}
+.topbar{position:sticky;top:0;z-index:50;height:64px;background:rgba(13,16,22,0.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;gap:16px;}
+.logo{font-family:'Instrument Serif',serif;font-size:22px;font-style:italic;display:flex;align-items:center;gap:8px;}
+.preview-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:20px;padding:24px;}
+.card{background:#1f252f;border:1px solid #333;border-radius:var(--radius-lg);overflow:hidden;transition:all var(--transition);box-shadow:0 4px 20px rgba(0,0,0,0.4);}
+.card:hover{transform:translateY(-4px);border-color:var(--accent);box-shadow:0 12px 40px rgba(112,223,203,0.15);}
+.preview-img{width:100%;height:240px;object-fit:cover;display:block;}
+.card-body{padding:16px;}
+.title{font-size:16px;font-weight:700;margin-bottom:4px;}
+.meta{font-size:12.5px;color:var(--muted);}
+.score{position:absolute;top:12px;right:12px;background:rgba(0,0,0,0.75);color:var(--accent);padding:4px 10px;border-radius:999px;font-weight:700;font-size:13px;}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="logo"><span style="color:#70dfcb">●</span> StoryMinerPro • Zlata Visual Corpus</div>
+</header>
+
+<div class="preview-grid" id="grid"></div>
+
+<script>
+// Your corpus_mined.json data (paste the full array here or load from file)
+const corpusData = [ /* paste the entire JSON content from corpus_mined.json here */ ];
+
+// Simple visual mapping from our Mega archive (silver, gold, purple rug, etc.)
+const previewMap = {
+  "coefficientkiller-easy-request-6": "https://i.imgur.com/silveroversplit.jpg",   // oversplit examples
+  "curv3dsp4ce-anna-owen": "https://i.imgur.com/goldarch.jpg",
+  "curv3dsp4ce_contortionlove_ch1": "https://i.imgur.com/purplethroughbend.jpg",
+  // Add more as needed – or use a fallback
+};
+
+function getPreview(id) {
+  return previewMap[id] || "https://picsum.photos/id/1015/800/500"; // fallback shiny contortion image
+}
+
+function renderStories() {
+  const grid = document.getElementById('grid');
+  grid.innerHTML = corpusData.map(story => {
+    const summary = story.whyItFits || story.title || "Zlata-style extreme contortion";
+    return `
+      <div class="card" onclick="alert('Story: ${story.title}\\n\\nSummary: ${summary.replace(/"/g,'')}\\n\\nSeed: ${story.seedMode}\\nBand: excellent')">
+        <img class="preview-img" src="${getPreview(story.storyId)}" alt="${story.title}">
+        <div class="score">94</div>
+        <div class="card-body">
+          <div class="title">${story.title}</div>
+          <div class="meta">${story.seedMode.toUpperCase()} • ${summary.substring(0,120)}...</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+renderStories();
+</script>
+</body>
+</html>
