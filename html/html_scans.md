@@ -1813,3 +1813,955 @@
 
 
 
+######OUTPUT_7######
+
+
+{
+  "files": [
+    {
+      "audit": {
+        "filename": "07_trash_story-library_v1_fixed.html",
+        "original_name": "trash_story-library_v1_fixed.html",
+        "title": "Story Library — StoryMinerPro",
+        "functional_family": "story-library",
+        "purpose": "Provides a highly polished, dark-themed browsing interface for the story corpus with typography-focused reading modes and faceted filtering.",
+        "verdict": "superseded",
+        "estimated_completeness": "complete",
+        "version_notes": "v1 fixed; represents an early stabilization pass that preceded the more complex Batch 03 library variants.",
+        "cross_batch_overlap": [
+          "Batch 03: Core layout, reading density controls (compact/comfortable/expanded), and multi-select filtering logic."
+        ],
+        "review_note": ""
+      },
+      "feature_inventory": {
+        "filename": "07_trash_story-library_v1_fixed.html",
+        "ui_framework": "Vanilla JS + Custom CSS (Inter & Instrument Serif fonts)",
+        "layout_structure": "Sticky topbar and filter bar over a responsive grid/list content area.",
+        "colour_scheme": "Dark slate/navy with high-contrast mint accent (#70dfcb).",
+        "design_notes": "Elegant typography using 'Instrument Serif' for titles gives a literary feel. Sophisticated use of color-mix for transparency effects.",
+        "data_model": {
+          "input_format": "Inline STORIES array",
+          "output_format": "Dynamic DOM rendering with search highlighting",
+          "key_fields": [
+            "id",
+            "title",
+            "source",
+            "seed",
+            "explicit",
+            "band",
+            "tags",
+            "tone",
+            "summary"
+          ]
+        },
+        "functional_modules": [
+          {
+            "name": "Reading Density Engine",
+            "description": "Toggles between Compact, Comfortable, and Expanded views via CSS data-attributes, adjusting line-heights and clamps.",
+            "score": 3,
+            "score_reason": "Seamlessly adjusts whitespace and summary clamping for different reading contexts."
+          },
+          {
+            "name": "Faceted Filter System",
+            "description": "Multi-select filtering by match band, seed mode, source, and tone chips.",
+            "score": 2,
+            "score_reason": "Solid implementation, though lacks the advanced boolean logic of later Workbench tools."
+          }
+        ],
+        "unique_features": [
+          "Visual 'Explicit' rating scale using filled/unfilled dots (1-4 scale)",
+          "Instrument Serif typography integration"
+        ],
+        "missing_vs_peers": [
+          "CSV/JSON export functions",
+          "Scene-level extraction details"
+        ],
+        "best_elements": [
+          "The explicit indicator dot UI is visually cleaner than text labels",
+          "Typography choices elevate the 'Library' feel over a purely technical 'Miner' feel"
+        ],
+        "merge_concerns": [
+          "The data structure in the inline array is slightly different from canonical v2 JSON structures, missing exact/reusable wording fields."
+        ]
+      }
+    },
+    {
+      "audit": {
+        "filename": "07_trash_StoryMinerPro_Visual.html",
+        "original_name": "trash_StoryMinerPro_Visual.html",
+        "title": "StoryMinerPro • Zlata Flex • Visual Preview Edition",
+        "functional_family": "story-library",
+        "purpose": "A visual-first gallery view focusing on image previews and scoring badges.",
+        "verdict": "stub-abandoned",
+        "estimated_completeness": "stub",
+        "version_notes": "Early visual experiment; significantly less functional than Batch 02 visual variants.",
+        "cross_batch_overlap": [
+          "Batch 02: Visual/Gallery masonry concepts."
+        ],
+        "review_note": ""
+      },
+      "feature_inventory": {
+        "filename": "07_trash_StoryMinerPro_Visual.html",
+        "ui_framework": "Vanilla JS + CSS Grid",
+        "layout_structure": "Sidebar with a basic image grid.",
+        "colour_scheme": "Dark gray (#0f0f0f) with mint accent (#70dfcb).",
+        "design_notes": "Extremely basic, relies on absolute positioning for score overlays on images.",
+        "data_model": {
+          "input_format": "Inline array (mostly commented out stubs)",
+          "output_format": "DOM Image grid",
+          "key_fields": [
+            "id",
+            "title",
+            "preview",
+            "score",
+            "band"
+          ]
+        },
+        "functional_modules": [
+          {
+            "name": "Image Grid Renderer",
+            "description": "Maps over a basic array to render image cards.",
+            "score": 1,
+            "score_reason": "Trivial implementation with no actual interactivity or filtering."
+          }
+        ],
+        "unique_features": [],
+        "missing_vs_peers": [
+          "Filtering",
+          "Search",
+          "Detail views",
+          "Actual data"
+        ],
+        "best_elements": [],
+        "merge_concerns": [
+          "Nothing to merge; safe to discard."
+        ]
+      }
+    },
+    {
+      "audit": {
+        "filename": "07_trash_storyminerpro-all-stories.html",
+        "original_name": "trash_storyminerpro-all-stories.html",
+        "title": "StoryMinerPro - All Stories",
+        "functional_family": "storyminer",
+        "purpose": "Provides a compact, summary-led browse view of all stories with workbench-style grading fields.",
+        "verdict": "superseded",
+        "estimated_completeness": "complete",
+        "version_notes": "Ancestor to the 'all-stories' lineage (v4/v5) seen in Batch 02.",
+        "cross_batch_overlap": [
+          "Batch 02: Baseline ancestor for v4 and v5 all-stories tools.",
+          "Batch 01: Core story taxonomy and DNA tags."
+        ],
+        "review_note": ""
+      },
+      "feature_inventory": {
+        "filename": "07_trash_storyminerpro-all-stories.html",
+        "ui_framework": "Vanilla JS + Custom CSS variables",
+        "layout_structure": "Two-column (Sidebar + Main) with a Hero KPI strip and dense list cards.",
+        "colour_scheme": "Light/Dark theme toggle. Primary teal (#01696f), success green, warning orange.",
+        "design_notes": "Highly dense utility layout. Minimizes whitespace to prioritize summary text and metadata chips.",
+        "data_model": {
+          "input_format": "Inline stories array",
+          "output_format": "List-based DOM rendering",
+          "key_fields": [
+            "id",
+            "title",
+            "seedMode",
+            "reviewState",
+            "explicitness",
+            "score",
+            "setup",
+            "consent",
+            "dna"
+          ]
+        },
+        "functional_modules": [
+          {
+            "name": "Multi-Factor Filter",
+            "description": "Filters by search, explicitness, seed mode, and review state.",
+            "score": 2,
+            "score_reason": "Standard array filtering, functional but tightly coupled to the UI state."
+          },
+          {
+            "name": "KPI Hero Strip",
+            "description": "Calculates and displays visible, approved, and core match counts dynamically.",
+            "score": 2,
+            "score_reason": "Useful at-a-glance metrics that update reactively with filters."
+          }
+        ],
+        "unique_features": [
+          "Detailed split-summary layout (first paragraph normal, subsequent paragraphs muted)"
+        ],
+        "missing_vs_peers": [
+          "Advanced extraction viewing",
+          "Export capabilities"
+        ],
+        "best_elements": [
+          "The density of the card layout is excellent for triage and scanning."
+        ],
+        "merge_concerns": [
+          "Data model uses 'setup' and 'consent' fields which may have been deprecated in later canonical models."
+        ]
+      }
+    },
+    {
+      "audit": {
+        "filename": "07_trash_storyminerpro-all-storiesv2.html",
+        "original_name": "trash_storyminerpro-all-storiesv2.html",
+        "title": "StoryMinerPro • Corpus Triage",
+        "functional_family": "storyminer",
+        "purpose": "A streamlined 'Triage' view of the corpus, iterating on the base all-stories layout.",
+        "verdict": "superseded",
+        "estimated_completeness": "partial",
+        "version_notes": "v2 of the all-stories lineage. Sidebar navigation is present in HTML but logic is stubbed out.",
+        "cross_batch_overlap": [
+          "Batch 02: All-stories lineage."
+        ],
+        "review_note": ""
+      },
+      "feature_inventory": {
+        "filename": "07_trash_storyminerpro-all-storiesv2.html",
+        "ui_framework": "Vanilla JS + Custom CSS",
+        "layout_structure": "Two-column with topbar search and hero KPI strip.",
+        "colour_scheme": "Light/Dark theme supported via CSS variables.",
+        "design_notes": "Reduces card height compared to v1 by clamping the summary to a single line.",
+        "data_model": {
+          "input_format": "Inline array (implied, code is truncated in rendering script for brevity)",
+          "output_format": "DOM rendering",
+          "key_fields": [
+            "id",
+            "title",
+            "score",
+            "band",
+            "dna"
+          ]
+        },
+        "functional_modules": [
+          {
+            "name": "BENCHMARK Badging",
+            "description": "Dynamically flags stories as 'BENCHMARK' if band is 'core' and score > 85.",
+            "score": 2,
+            "score_reason": "Good programmatic surfacing of top-tier content."
+          }
+        ],
+        "unique_features": [],
+        "missing_vs_peers": [
+          "Sidebar filtering logic is incomplete in this specific file."
+        ],
+        "best_elements": [
+          "The Benchmark badging logic is a smart, automated way to highlight canonical examples."
+        ],
+        "merge_concerns": [
+          "File seems to be a transitional draft."
+        ]
+      }
+    },
+    {
+      "audit": {
+        "filename": "07_trash_storyminerpro-all-storiesv3.html",
+        "original_name": "trash_storyminerpro-all-storiesv3.html",
+        "title": "StoryMinerPro • Corpus Triage",
+        "functional_family": "storyminer",
+        "purpose": "A minor iteration on v2 of the Corpus Triage tool.",
+        "verdict": "dupe",
+        "estimated_completeness": "partial",
+        "version_notes": "v3; virtually identical to v2 with only minor CSS tweaks (hover transforms).",
+        "cross_batch_overlap": [
+          "Batch 07: Duplicates v2."
+        ],
+        "review_note": "Can be safely ignored in favor of later v4/v5 versions from Batch 02."
+      },
+      "feature_inventory": {
+        "filename": "07_trash_storyminerpro-all-storiesv3.html",
+        "ui_framework": "Vanilla JS + Custom CSS",
+        "layout_structure": "Two-column layout.",
+        "colour_scheme": "Light/Dark theme support.",
+        "design_notes": "Adds minor hover transforms to cards.",
+        "data_model": {
+          "input_format": "Inline array",
+          "output_format": "DOM rendering",
+          "key_fields": []
+        },
+        "functional_modules": [
+          {
+            "name": "List Renderer",
+            "description": "Renders filtered list.",
+            "score": 1,
+            "score_reason": "Basic implementation."
+          }
+        ],
+        "unique_features": [],
+        "missing_vs_peers": [],
+        "best_elements": [],
+        "merge_concerns": []
+      }
+    },
+    {
+      "audit": {
+        "filename": "07_trash_StoryMinerPro.html",
+        "original_name": "trash_StoryMinerPro.html",
+        "title": "Story Miner Pro",
+        "functional_family": "storyminer",
+        "purpose": "A comprehensive, multi-mode tool (Browse, Ingest, Recombine) for extracting, analyzing, and synthesizing story concepts.",
+        "verdict": "superseded",
+        "estimated_completeness": "complete",
+        "version_notes": "Appears to be a massive, ambitious pre-v2 baseline that contained complex 'Recombine' architecture later dropped or split into the 'Generator' family.",
+        "cross_batch_overlap": [
+          "Batch 01: Core ingest and extraction flows.",
+          "Batch 04: Generator prompts (The 'Recombine' mode conceptually overlaps with generation)."
+        ],
+        "review_note": ""
+      },
+      "feature_inventory": {
+        "filename": "07_trash_StoryMinerPro.html",
+        "ui_framework": "Vanilla JS + Custom CSS",
+        "layout_structure": "App-like three-pane structure depending on mode. Highly complex sidebar and topbar.",
+        "colour_scheme": "Dark/Light themes with primary teal (#01696f).",
+        "design_notes": "Feels like a full SPA. Uses sophisticated modal overlays, tag clouds, and multi-step forms.",
+        "data_model": {
+          "input_format": "JSON import, inline demo data, or text-area ingest",
+          "output_format": "Complex UI, JSON export, Markdown export",
+          "key_fields": [
+            "storyGroup",
+            "poseFamily",
+            "exactWording",
+            "reusableWording",
+            "portability"
+          ]
+        },
+        "functional_modules": [
+          {
+            "name": "Recombination Builder (Concept Stack)",
+            "description": "Allows users to select Character Energy, Plot Scaffold, Pose Setpiece, and Tone Register to dynamically generate a 'Concept Stack' and writing prompts.",
+            "score": 3,
+            "score_reason": "Incredible feature for moving from analysis (mining) to synthesis (generation). This is a missing link between StoryMiner and the LLM Generators."
+          },
+          {
+            "name": "Dual View Toggle",
+            "description": "Toggles browse results between 'Exact Source Wording' and 'Reusable Paraphrase'.",
+            "score": 3,
+            "score_reason": "Solves a major UX problem in the miner by allowing quick switching between raw data and sanitized output."
+          },
+          {
+            "name": "Extraction Detail Modal",
+            "description": "Side-by-side comparison of exact vs reusable wording with editable tag clouds and portability scoring.",
+            "score": 3,
+            "score_reason": "Best-in-class UI for editing a specific extraction."
+          }
+        ],
+        "unique_features": [
+          "Recombine Mode (Concept Stack Builder)",
+          "Auto-generation of Writing and Analysis Prompts based on selected modules",
+          "LocalStorage persistence wrapper (`saveData`, `loadData`)"
+        ],
+        "missing_vs_peers": [
+          "Modern taxonomy (uses older tag structures)"
+        ],
+        "best_elements": [
+          "The 'Recombination Builder' is a unique gem that must be salvaged for the Generator or a merged StoryMiner tool.",
+          "The Side-by-Side comparison UI in the modal is vastly superior to stacked text areas."
+        ],
+        "merge_concerns": [
+          "The data schema used here is likely out of sync with the Batch 01 canonical v2 schema."
+        ]
+      }
+    },
+    {
+      "audit": {
+        "filename": "07_VIEW_storyminerpro.html",
+        "original_name": "VIEW_storyminerpro.html",
+        "title": "StoryMinerPro — Wide-Screen Library Browser",
+        "functional_family": "story-library",
+        "purpose": "A wide-screen, Tailwind-powered library browser featuring drag-and-drop image attachments and a side-by-side Scene Reader.",
+        "verdict": "active-variant",
+        "estimated_completeness": "complete",
+        "version_notes": "A 'VIEW' copy that deviates significantly in UI technology (Tailwind) and UX patterns from standard canonical versions.",
+        "cross_batch_overlap": [
+          "Batch 03: Library grid layout.",
+          "Batch 07: Shares the side-by-side comparison concept with `trash_StoryMinerPro.html`."
+        ],
+        "review_note": ""
+      },
+      "feature_inventory": {
+        "filename": "07_VIEW_storyminerpro.html",
+        "ui_framework": "Tailwind CSS via CDN + Vanilla JS",
+        "layout_structure": "Sticky top filter bar over a Masonry-style grid, with a full-screen Scene Reader modal.",
+        "colour_scheme": "Tailwind Slate palette (slate-900, slate-800) with Blue/Green accents.",
+        "design_notes": "Highly modern. Uses a hotkey panel, responsive grid, and clean utility classes.",
+        "data_model": {
+          "input_format": "Fetches `default-corpus.json` or accepts File Uploads (JSON/TXT/MD/RTF)",
+          "output_format": "DOM rendering, Markdown Export",
+          "key_fields": [
+            "title",
+            "zstyle_score",
+            "match_band",
+            "exactWording",
+            "reusableWording",
+            "images"
+          ]
+        },
+        "functional_modules": [
+          {
+            "name": "Scene Reader Modal",
+            "description": "Full-screen modal with sidebar metadata and main area showing side-by-side Exact vs Reusable wording, paginated by 'Scene Tabs'.",
+            "score": 3,
+            "score_reason": "Exceptional reading and comparison UX; the tabbed scene navigation is brilliant."
+          },
+          {
+            "name": "Drag-Drop Image Attachment",
+            "description": "Allows users to drag images onto story cards to attach them as base64 previews, readable in an integrated Lightbox.",
+            "score": 3,
+            "score_reason": "Only tool across all batches with native image attachment and a functional lightbox gallery."
+          },
+          {
+            "name": "Keyboard Shortcuts Engine",
+            "description": "Global hotkeys (Esc, /, Arrows) with a dedicated 'Shift+?' help panel.",
+            "score": 3,
+            "score_reason": "Significantly improves power-user navigation."
+          }
+        ],
+        "unique_features": [
+          "Tailwind CSS implementation",
+          "Drag-and-drop base64 image attachment",
+          "Integrated Image Lightbox",
+          "Keyboard Shortcuts Panel",
+          "On-the-fly multi-format file upload (JSON/TXT/MD/RTF)"
+        ],
+        "missing_vs_peers": [
+          "Advanced Workbench grading tools",
+          "Recombine builder (from File 6)"
+        ],
+        "best_elements": [
+          "Tailwind UI looks substantially more modern than the custom CSS in other files.",
+          "Image attachment transforms the library into a true moodboard/reference tool.",
+          "Scene Reader modal is the best implementation of scene-by-scene reading."
+        ],
+        "merge_concerns": [
+          "Introduces Tailwind, which conflicts with the vanilla CSS approach used in 95% of the other tools. A merge decision must be made on CSS methodology."
+        ]
+      }
+    }
+  ],
+  "batch_summary": {
+    "batch": "07",
+    "tool_family": "storyminer-library-legacy",
+    "canonical_baseline": "07_VIEW_storyminerpro.html (for UI/UX patterns) and 07_trash_StoryMinerPro.html (for Recombine logic)",
+    "recommended_features": [
+      {
+        "feature": "Recombination Builder (Concept Stack)",
+        "source_file": "07_trash_StoryMinerPro.html",
+        "score": 3
+      },
+      {
+        "feature": "Scene Reader Modal with Tabbed Scenes",
+        "source_file": "07_VIEW_storyminerpro.html",
+        "score": 3
+      },
+      {
+        "feature": "Drag-Drop Image Attachment & Lightbox",
+        "source_file": "07_VIEW_storyminerpro.html",
+        "score": 3
+      },
+      {
+        "feature": "Keyboard Shortcuts Panel",
+        "source_file": "07_VIEW_storyminerpro.html",
+        "score": 3
+      },
+      {
+        "feature": "Reading Density Engine (Comfortable/Compact)",
+        "source_file": "07_trash_story-library_v1_fixed.html",
+        "score": 3
+      }
+    ],
+    "design_direction": "Adopt the modern, wide-screen, Tailwind-driven approach of `07_VIEW_storyminerpro.html`. It provides the cleanest modal system (Scene Reader) and natively supports the side-by-side exact/reusable comparison that older tools struggled to format.",
+    "data_model_recommendation": "Extend the canonical JSON schema to support an `images` array (base64 or URL strings) as seen in the VIEW file, and ensure `exactWording`/`reusableWording` are maintained as aligned arrays to support tabbed scene navigation.",
+    "unique_gems": [
+      "The 'Recombine Mode' (File 6) bridging the gap between mining data and prompting LLMs.",
+      "Base64 Drag-and-drop Image Attachment (File 7).",
+      "Keyboard Shortcut Engine (File 7)."
+    ],
+    "cross_batch_notes": "Batch 07 fundamentally changes the outlook on both StoryMiner and the Generator tools. The 'Recombine' feature found here was lost in later canonical StoryMiner v2.x (Batch 01) and should be resurrected as a core feature of the Generator suite (Batch 04). Furthermore, the Tailwind implementation in `07_VIEW_storyminerpro.html` is vastly superior to the custom CSS used in Batch 03's canonical Story Libraries.",
+    "open_questions": [
+      "Should the final, unified toolset migrate entirely to Tailwind CSS, given the success of the VIEW implementation?",
+      "Does the 'Recombine Mode' belong in the StoryMiner (as a synthesis step) or should it be abstracted into a standalone 'Story Builder / Generator' tool?",
+      "Are we comfortable storing base64 images directly in the corpus JSON, or will this bloat the file size beyond browser limits?"
+    ]
+  }
+}
+
+
+######OUTPUT_8######
+
+
+
+{
+  "files": [
+    {
+      "audit": {
+        "filename": "08_trash_zlata-story-graderv1.html",
+        "original_name": "trash_zlata-story-graderv1.html",
+        "title": "Zlata Story Grader v1",
+        "functional_family": "workbench",
+        "purpose": "A rudimentary form for manually scoring stories based on basic criteria like readability and theme.",
+        "verdict": "superseded",
+        "estimated_completeness": "stub",
+        "version_notes": "The earliest v1 baseline. Severely outdated compared to Batch 04.",
+        "cross_batch_overlap": [
+          "Batch 04: The conceptual origin of the Workbench manual grading panel."
+        ],
+        "review_note": ""
+      },
+      "feature_inventory": {
+        "filename": "08_trash_zlata-story-graderv1.html",
+        "ui_framework": "Vanilla HTML/CSS",
+        "layout_structure": "Single-column stacked form.",
+        "colour_scheme": "Light theme, generic browser defaults with light gray borders.",
+        "design_notes": "Extremely basic. Lacks the density and dark mode of later Workbench iterations.",
+        "data_model": {
+          "input_format": "Manual form entry",
+          "output_format": "Simple JSON block rendered in a <pre> tag",
+          "key_fields": [
+            "title",
+            "author",
+            "score_grammar",
+            "score_theme"
+          ]
+        },
+        "functional_modules": [
+          {
+            "name": "Basic JSON Compiler",
+            "description": "Reads form inputs and outputs a stringified JSON object.",
+            "score": 1,
+            "score_reason": "Trivial implementation with no validation or formatting."
+          }
+        ],
+        "unique_features": [],
+        "missing_vs_peers": [
+          "DNA tagging",
+          "Review state tracking",
+          "Export functionality"
+        ],
+        "best_elements": [],
+        "merge_concerns": [
+          "Data model is entirely incompatible with the canonical Workbench schema. Safe to ignore."
+        ]
+      }
+    },
+    {
+      "audit": {
+        "filename": "08_trash_zlata-style-graderv2.html",
+        "original_name": "trash_zlata-style-graderv2.html",
+        "title": "Zlata Style Grader v2",
+        "functional_family": "workbench",
+        "purpose": "Expands the v1 form to include specific 'Style' signals and Zlata DNA taxonomy.",
+        "verdict": "superseded",
+        "estimated_completeness": "partial",
+        "version_notes": "v2 introduces the 'style' taxonomy that became central to Batch 04 Workbench.",
+        "cross_batch_overlap": [
+          "Batch 04: Introduces the 'Zlata DNA' checkbox taxonomy seen in Workbench v5."
+        ],
+        "review_note": ""
+      },
+      "feature_inventory": {
+        "filename": "08_trash_zlata-style-graderv2.html",
+        "ui_framework": "Vanilla JS + basic CSS",
+        "layout_structure": "Two-column layout (Form on left, JSON preview on right).",
+        "colour_scheme": "Light gray with blue accents.",
+        "design_notes": "First attempt at organizing the grading criteria into distinct taxonomy groups.",
+        "data_model": {
+          "input_format": "Manual form entry",
+          "output_format": "Structured JSON with nested taxonomy object",
+          "key_fields": [
+            "title",
+            "overall_score",
+            "dna_signals",
+            "style_notes"
+          ]
+        },
+        "functional_modules": [
+          {
+            "name": "DNA Taxonomy Picker",
+            "description": "Checkbox group for selecting narrative and geometric DNA signals.",
+            "score": 2,
+            "score_reason": "Functional and foundational, but hardcoded and visually cluttered."
+          }
+        ],
+        "unique_features": [],
+        "missing_vs_peers": [
+          "Score weighting",
+          "Corpus ingestion"
+        ],
+        "best_elements": [
+          "The separation of 'narrative' vs 'geometric' DNA signals originated here."
+        ],
+        "merge_concerns": [
+          "Hardcoded taxonomy lists make it difficult to update."
+        ]
+      }
+    },
+    {
+      "audit": {
+        "filename": "08_trash_zlata-style-graderv3.html",
+        "original_name": "trash_zlata-style-graderv3.html",
+        "title": "Zlata Style Grader v3 - Enhanced",
+        "functional_family": "workbench",
+        "purpose": "Improves v2 by adding score calculation logic and clipboard export features.",
+        "verdict": "superseded",
+        "estimated_completeness": "partial",
+        "version_notes": "v3 bridges the gap between a static form and an automated tool.",
+        "cross_batch_overlap": [
+          "Batch 04: The auto-calculation of the 'Z-Score' appears here first."
+        ],
+        "review_note": ""
+      },
+      "feature_inventory": {
+        "filename": "08_trash_zlata-style-graderv3.html",
+        "ui_framework": "Vanilla JS + CSS Flexbox",
+        "layout_structure": "Split panel layout with a sticky header.",
+        "colour_scheme": "Dark mode introduced (slate grey background, teal highlights).",
+        "design_notes": "Matches the aesthetic shift towards dark mode seen across the canonical tools.",
+        "data_model": {
+          "input_format": "Manual entry",
+          "output_format": "JSON export to clipboard",
+          "key_fields": [
+            "record_id",
+            "calculated_score",
+            "dna_profile"
+          ]
+        },
+        "functional_modules": [
+          {
+            "name": "Score Calculator",
+            "description": "Calculates a weighted score based on the presence of specific DNA tags.",
+            "score": 2,
+            "score_reason": "Good conceptual logic, but lacks the nuance of the Workbench v6.1 multi-axis scoring."
+          },
+          {
+            "name": "Clipboard Exporter",
+            "description": "Formats the output and copies it to the clipboard.",
+            "score": 2,
+            "score_reason": "Standard utility, executed cleanly."
+          }
+        ],
+        "unique_features": [],
+        "missing_vs_peers": [
+          "File upload/download",
+          "Batch processing"
+        ],
+        "best_elements": [],
+        "merge_concerns": []
+      }
+    },
+    {
+      "audit": {
+        "filename": "08_trash_zlata-style-graderv4.html",
+        "original_name": "trash_zlata-style-graderv4.html",
+        "title": "Story Grader v4 Final",
+        "functional_family": "workbench",
+        "purpose": "The direct predecessor to Workbench v5, combining advanced taxonomy with text analysis.",
+        "verdict": "superseded",
+        "estimated_completeness": "complete",
+        "version_notes": "v4 finalizes the schema that Workbench v5 adopted. It represents the end of the standalone 'grader' lineage before it became the 'Workbench'.",
+        "cross_batch_overlap": [
+          "Batch 04: Schema is nearly identical to Workbench v5."
+        ],
+        "review_note": ""
+      },
+      "feature_inventory": {
+        "filename": "08_trash_zlata-style-graderv4.html",
+        "ui_framework": "Vanilla JS + Custom CSS (Tailwind-like utility classes)",
+        "layout_structure": "Three-pane layout: Source Text, Grading Form, Output JSON.",
+        "colour_scheme": "Dark theme with specific colour coding for match bands (Green for Core, Blue for Strong).",
+        "design_notes": "Highly dense, functional UI. Starts to look exactly like the modern Workbench.",
+        "data_model": {
+          "input_format": "Paste text or JSON",
+          "output_format": "Batch 04 standard JSON record",
+          "key_fields": [
+            "id",
+            "source_text",
+            "zstyle_score",
+            "match_band",
+            "dna_tags",
+            "review_notes"
+          ]
+        },
+        "functional_modules": [
+          {
+            "name": "Match Band Evaluator",
+            "description": "Automatically assigns Core/Strong/Partial band based on the calculated score.",
+            "score": 2,
+            "score_reason": "Solid logic, heavily reused in Batch 04."
+          },
+          {
+            "name": "JSON Ingest Reader",
+            "description": "Allows pasting an existing JSON record to populate the form.",
+            "score": 2,
+            "score_reason": "Crucial for editing existing records, a feature carried over to Workbench."
+          }
+        ],
+        "unique_features": [
+          "Colour-coded match bands explicitly defined in the UI header"
+        ],
+        "missing_vs_peers": [
+          "Corpus table view (only handles one record at a time)"
+        ],
+        "best_elements": [
+          "The clean three-pane layout is excellent for single-record deep dives."
+        ],
+        "merge_concerns": []
+      }
+    },
+    {
+      "audit": {
+        "filename": "08_trash_zlata-interactive-grader.html",
+        "original_name": "trash_zlata-interactive-grader.html",
+        "title": "Interactive Story Grader",
+        "functional_family": "workbench",
+        "purpose": "A UI experiment focusing on real-time visual feedback using sliders and radial progress bars for scoring.",
+        "verdict": "active-variant",
+        "estimated_completeness": "complete",
+        "version_notes": "A parallel branch to v4, experimenting with UX. Features highly interactive components not found in standard Workbench.",
+        "cross_batch_overlap": [
+          "Batch 04: Contrasts with Workbench v6.1, which relies on static dropdowns instead of sliders."
+        ],
+        "review_note": ""
+      },
+      "feature_inventory": {
+        "filename": "08_trash_zlata-interactive-grader.html",
+        "ui_framework": "Vanilla JS + CSS (Canvas for radial charts)",
+        "layout_structure": "Dashboard layout with prominent visual dials and range sliders.",
+        "colour_scheme": "Dark mode with vibrant neon accents (pink, cyan, lime).",
+        "design_notes": "Gamified UX. The sliders make grading feel tactile and immediate compared to forms.",
+        "data_model": {
+          "input_format": "Manual slider input",
+          "output_format": "JSON object",
+          "key_fields": [
+            "pacing_score",
+            "geometry_score",
+            "theme_score",
+            "composite_score"
+          ]
+        },
+        "functional_modules": [
+          {
+            "name": "Real-time Composite Scorer",
+            "description": "Updates a central radial progress bar instantly as axis sliders are moved.",
+            "score": 3,
+            "score_reason": "Provides immediate, satisfying visual feedback for grading, superior to text-based score readouts."
+          },
+          {
+            "name": "Axis Slider Inputs",
+            "description": "Range sliders (0-100) for specific grading axes (Pacing, Geometry, Theme).",
+            "score": 3,
+            "score_reason": "More intuitive for analog grading than typing numbers or selecting from 1-10 dropdowns."
+          }
+        ],
+        "unique_features": [
+          "Radial progress canvas",
+          "Range slider inputs for scoring axes",
+          "Gamified visual feedback"
+        ],
+        "missing_vs_peers": [
+          "Text ingestion (purely a scoring interface)",
+          "Complex taxonomy tagging"
+        ],
+        "best_elements": [
+          "The slider-based grading UI and radial composite score visualization should absolutely be recovered and integrated into the canonical Workbench."
+        ],
+        "merge_concerns": [
+          "Sliders map to a 0-100 scale, whereas Workbench v6.1 might use a 1-10 or discrete bucket scale. Normalization logic required."
+        ]
+      }
+    },
+    {
+      "audit": {
+        "filename": "08_trash_zlata-grader-suite.html",
+        "original_name": "trash_zlata-grader-suite.html",
+        "title": "Zlata Grader Suite Workspace",
+        "functional_family": "workbench",
+        "purpose": "An experiment in combining a corpus queue, a grading form, and an export manager into a single dashboard.",
+        "verdict": "superseded",
+        "estimated_completeness": "complete",
+        "version_notes": "The direct architectural prototype for Workbench v6.1's multi-panel layout.",
+        "cross_batch_overlap": [
+          "Batch 04: The exact structural predecessor to Workbench v6.1."
+        ],
+        "review_note": ""
+      },
+      "feature_inventory": {
+        "filename": "08_trash_zlata-grader-suite.html",
+        "ui_framework": "Vanilla JS + CSS Grid",
+        "layout_structure": "Complex grid: Sidebar queue, central grading panel, right-side metadata/export panel.",
+        "colour_scheme": "Dark slate with muted blue borders.",
+        "design_notes": "Highly complex. Proves the concept of managing a queue of records within the tool, rather than pasting them one by one.",
+        "data_model": {
+          "input_format": "JSON array upload (Corpus)",
+          "output_format": "Modified JSON array export",
+          "key_fields": [
+            "corpus_queue",
+            "active_record",
+            "session_exports"
+          ]
+        },
+        "functional_modules": [
+          {
+            "name": "Corpus Queue Manager",
+            "description": "Loads a JSON array and displays a clickable list in the sidebar to switch between records.",
+            "score": 3,
+            "score_reason": "Fundamental workflow enhancement that transitioned the tool from a single-record processor to a corpus manager."
+          },
+          {
+            "name": "Session State Saver",
+            "description": "Saves grading progress to localStorage to prevent data loss.",
+            "score": 2,
+            "score_reason": "Crucial utility, though executed slightly better in Batch 04."
+          }
+        ],
+        "unique_features": [
+          "Explicit 'Session Manager' tab for recovering lost work"
+        ],
+        "missing_vs_peers": [
+          "The advanced search/filter features of Workbench v6.1"
+        ],
+        "best_elements": [
+          "The concept of a persistent, local-storage backed grading session."
+        ],
+        "merge_concerns": []
+      }
+    },
+    {
+      "audit": {
+        "filename": "08_trash_storyminer.html",
+        "original_name": "trash_storyminer.html",
+        "title": "StoryMiner (Legacy Version)",
+        "functional_family": "unknown",
+        "purpose": "A hybrid tool attempting to do both text extraction and metadata grading in one interface.",
+        "verdict": "superseded",
+        "estimated_completeness": "partial",
+        "version_notes": "Naming collision. This predates the clean split between 'StoryMiner' (extraction) and 'Workbench' (grading).",
+        "cross_batch_overlap": [
+          "Batch 01: Contains primitive extraction logic.",
+          "Batch 04: Contains primitive grading logic."
+        ],
+        "review_note": "Classified as superseded hybrid. It proves why the tools were eventually split: doing both text extraction and complex taxonomy grading in one UI is too cluttered."
+      },
+      "feature_inventory": {
+        "filename": "08_trash_storyminer.html",
+        "ui_framework": "Vanilla JS + CSS",
+        "layout_structure": "Split screen: Text highlighter left, massive form right.",
+        "colour_scheme": "Light theme, high-contrast highlighting colors.",
+        "design_notes": "Overwhelming UI. Too many form fields competing with text highlighting mechanics.",
+        "data_model": {
+          "input_format": "Raw text",
+          "output_format": "Bloated JSON object containing both snippets and scores",
+          "key_fields": [
+            "raw_text",
+            "extracted_snippets",
+            "overall_score",
+            "theme_tags"
+          ]
+        },
+        "functional_modules": [
+          {
+            "name": "Hybrid Extraction/Scoring Engine",
+            "description": "Allows highlighting text to save as a snippet, while simultaneously filling out global story scores.",
+            "score": 1,
+            "score_reason": "Confuses record-level metadata with snippet-level data. Flawed data model."
+          }
+        ],
+        "unique_features": [],
+        "missing_vs_peers": [
+          "Clear separation of concerns"
+        ],
+        "best_elements": [],
+        "merge_concerns": [
+          "Data model is a convoluted mix of Batch 01 and Batch 04 schemas. Do not merge."
+        ]
+      }
+    },
+    {
+      "audit": {
+        "filename": "08_trash_StoryMinerPro_X_WRITER_dupe.html",
+        "original_name": "trash_StoryMinerPro_X_WRITER_dupe.html",
+        "title": "StoryMinerPro X Writer Integration",
+        "functional_family": "job-prompt",
+        "purpose": "An integrated prototype combining extraction viewing with an LLM prompt generator.",
+        "verdict": "dupe",
+        "estimated_completeness": "partial",
+        "version_notes": "A duplicate/prototype integration that attempts to bridge StoryMiner and the Generator wrappers (Batch 06).",
+        "cross_batch_overlap": [
+          "Batch 05: Generator concepts.",
+          "Batch 06: Prompt wrapping logic."
+        ],
+        "review_note": "A messy duplicate combining features better handled by the canonical Generator tools."
+      },
+      "feature_inventory": {
+        "filename": "08_trash_StoryMinerPro_X_WRITER_dupe.html",
+        "ui_framework": "Vanilla JS + Bootstrap",
+        "layout_structure": "Tabbed interface (Extract | Grade | Generate).",
+        "colour_scheme": "Bootstrap default dark mode.",
+        "design_notes": "Clunky tabbed navigation. Attempts to be an all-in-one IDE.",
+        "data_model": {
+          "input_format": "JSON record",
+          "output_format": "LLM Prompt String",
+          "key_fields": [
+            "record_data",
+            "prompt_template",
+            "injected_prompt"
+          ]
+        },
+        "functional_modules": [
+          {
+            "name": "Prompt Injector",
+            "description": "Takes variables from the grading/extraction tabs and injects them into a pre-written prompt template.",
+            "score": 2,
+            "score_reason": "Functional, but identical to the logic audited in Batch 06."
+          }
+        ],
+        "unique_features": [
+          "Tabbed 'All-in-One' workflow"
+        ],
+        "missing_vs_peers": [
+          "Advanced prompt safeguards (from Batch 06)"
+        ],
+        "best_elements": [],
+        "merge_concerns": [
+          "Redundant logic. The modular separation of tools is superior to this monolithic approach."
+        ]
+      }
+    }
+  ],
+  "batch_summary": {
+    "batch": "08",
+    "tool_family": "legacy-grader-experiments",
+    "canonical_baseline": "Batch 04 Workbench remains the canonical baseline. Batch 08 provides historical context and specific UI recovery candidates.",
+    "recommended_features": [
+      {
+        "feature": "Real-time Composite Scorer (Radial progress canvas)",
+        "source_file": "08_trash_zlata-interactive-grader.html",
+        "score": 3
+      },
+      {
+        "feature": "Axis Slider Inputs for analog grading",
+        "source_file": "08_trash_zlata-interactive-grader.html",
+        "score": 3
+      },
+      {
+        "feature": "Persistent Session State Manager (localStorage recovery)",
+        "source_file": "08_trash_zlata-grader-suite.html",
+        "score": 2
+      }
+    ],
+    "design_direction": "Maintain the canonical Workbench v6.1 layout (from Batch 04), but retrofit it with the gamified, tactile UI elements from the `interactive-grader` experiment. Replacing static dropdowns with range sliders and radial score visualizations will significantly improve the UX of manual grading.",
+    "data_model_recommendation": "The schema finalized in `zlata-style-graderv4.html` (which exactly matches Workbench v5) is correct. Reject the hybrid schema found in `storyminer.html`. Ensure the 0-100 scale from the interactive sliders is properly normalized to the canonical scoring system.",
+    "unique_gems": [
+      "The slider-based grading interface and radial visualizer in `interactive-grader`."
+    ],
+    "cross_batch_notes": "Batch 08 confirms that the 'Workbench' (Batch 04) is the evolutionary successor to a four-stage 'Grader' lineage. It also clarifies that attempting to combine Extraction (Batch 01), Grading (Batch 04), and Generation (Batch 05/06) into a single monolithic UI (as seen in the `storyminer` and `X_WRITER_dupe` files) results in overwhelming clutter. The current modular, separated-tool architecture is the correct path.",
+    "open_questions": [
+      "Should the numerical scale for grading (currently 1-10 or categorical in Workbench) be permanently migrated to a 0-100 scale to support the slider UI from the interactive prototype?",
+      "Can the radial score visualizer be adapted to display multi-axis DNA matches rather than just a single composite score?"
+    ]
+  }
+}
+

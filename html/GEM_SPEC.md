@@ -287,3 +287,51 @@ Feature inventory focus:
 
 The batch_summary for this batch should include a full pipeline map: what you can infer about the intended end-to-end prompt workflow (steps 1 through 5+), and which steps are currently missing or incomplete.
 ```
+
+
+---
+
+## Batch 07 — Legacy StoryMiner / stray copies. These 7 files are older or stray HTML tools copied from trash and VIEW locations after the first 6 batches were already audited. Treat this batch as a lineage-recovery and archive-triage pass. You have already audited the StoryMiner v2.x core series (Batch 01), StoryMiner variants/forks (Batch 02), and Story Library family (Batch 03) — use those as the baseline for comparison throughout this batch.
+
+Audit focus:
+- Determine where each file belongs in the lineage: pre-v2 StoryMiner ancestor, parallel branch, visual experiment, Story Library predecessor, or dead-end duplicate.
+- `07_VIEW_storyminerpro.html` may be a live-view copy rather than a true version milestone — determine whether it contains distinct logic/UI or is just a relocated duplicate.
+- `07_trash_StoryMinerPro.html` may be an older pre-v2 baseline. Compare it against Batch 01 v2/v2.1 and note whether it contains any architectural ideas that were later removed.
+- `07_trash_StoryMinerPro_Visual.html` looks like a visual/gallery fork. Determine whether it is closer to Batch 02 visual corpus variants or to the Story Library family from Batch 03.
+- `07_trash_story-library_v1_fixed.html` may be an early Story Library stabilization pass. Determine whether it is a meaningful predecessor to the Batch 03 family or just a repaired duplicate.
+- `07_trash_storyminerpro-all-stories.html`, `v2`, and `v3` appear to be older members of the all-stories lineage that later surfaced in Batch 02 as v4/v5 and the Zlata-specific v5 fork. Map the sequence as far as possible: base → v2 → v3 → v4 → v5 → v5-zlata, and identify the key functional jumps.
+- Because these files were sourced from trash/VIEW folders, be especially careful distinguishing true functional variants from misleading duplicates or abandoned copies.
+
+Feature inventory focus:
+- For every file that is not a trivial dupe or stub, produce a full feature inventory.
+- Cross-reference against Batches 01–03. Flag any module, UI pattern, or data-model assumption here that disappeared from later canonical lines but may still be worth salvaging.
+- Score all functional modules 1–3. Any score-3 element missing from the current canonical StoryMiner or Story Library should be called out clearly in `best_elements`.
+- Pay close attention to lineage clues in titles, variable names, inline comments, schema fields, and UI labels. These may matter more than the filenames.
+- Note whether the older all-stories files are still StoryMiner tools, transitional library browsers, or a separate hybrid family that later split into StoryMiner vs Story Library.
+- In `cross_batch_overlap`, explicitly cite overlap with Batch 01, 02, or 03 when relevant.
+
+The goal is to recover any valuable pre-v2 or pre-library features that were lost, while also deciding which of these files are safe to classify as superseded, dupe, or stub-abandoned. The batch_summary should include a lineage note explaining where Batch 07 fits relative to Batches 01–03 and whether any of these files should alter the current canonical recommendations.
+
+
+---
+
+##Batch 08 — Legacy grader / pre-Workbench experiments. These 8 files were found in trash and appear to represent the older grading/scoring lineage that may predate or parallel the Workbench family audited in Batch 04. You have already audited the canonical Workbench versions in Batch 04, the Story Generator in Batch 05, and the JOB Prompt Wrappers in Batch 06 — use those findings as the comparison baseline throughout this batch.
+
+Audit focus:
+- Determine whether these files are true ancestors of the Workbench, parallel grading experiments, or unrelated dead-end prototypes.
+- The naming strongly suggests a progression among `zlata-story-graderv1`, `zlata-style-graderv2`, `v3`, and `v4`. Confirm whether this is a real lineage and map what changed at each stage.
+- `08_trash_zlata-interactive-grader.html` and `08_trash_zlata-grader-suite.html` may represent branching experiments: one focused on interactivity, the other on combining multiple grading tools. Determine how they relate to the later Workbench architecture from Batch 04.
+- `08_trash_storyminer.html` may be a naming-collision case: determine whether it is actually a StoryMiner extraction tool, a grader misnamed as StoryMiner, or a hybrid predecessor before the families split cleanly.
+- `08_trash_StoryMinerPro_X_WRITER_dupe.html` sounds like an integration or duplicate build. Determine whether it is just a renamed copy or a meaningful hybrid between extraction, grading, and generation.
+- Compare all of these against Batch 04 Workbench v5 and v6.1. Identify which capabilities were absorbed into Workbench, which were dropped, and which might still be worth recovering.
+- Check for cross-batch overlap with Batch 05 and 06 as well: do any of these grader experiments already contain prompt-generation, scoring explanations, workflow sequencing, or safeguard concepts that later reappeared in the generator/prompt wrappers?
+
+Feature inventory focus:
+- For each non-trivial file, produce a full feature inventory with particular emphasis on grading logic, taxonomy inputs, evaluation criteria, record structure, and output format.
+- Score all functional modules 1–3. Any score-3 grading or review module not present in the canonical Workbench should be highlighted in `recommended_features`.
+- Document the data model carefully. Note any schema drift relative to Batch 04 Workbench fields, especially scoring fields, taxonomy labels, style signals, or output summaries.
+- Identify whether these tools are single-record graders, corpus graders, interactive review tools, or multi-panel suites.
+- In `design_notes`, comment on whether any of these early graders have simpler or clearer UI patterns than the much larger v6.1 Workbench.
+- In `open_questions`, call out any unresolved lineage ambiguity: for example, whether `interactive-grader` or `grader-suite` should be treated as direct Workbench predecessors.
+
+The goal is to reconstruct the pre-Workbench grading lineage, identify any high-value grading/UI concepts worth recovering into the merged Workbench, and classify the rest as superseded, dupe, or stub-abandoned. The batch_summary should explicitly state whether Batch 08 changes the current understanding of Batch 04 as the canonical Workbench baseline, or simply provides historical context and salvage candidates.

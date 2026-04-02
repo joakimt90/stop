@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StoryMinerPro — Wide-Screen Library Browser</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #0f172a;
+    color: #e2e8f0;
+  }
+  .match-pill {
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+  .match-excellent { background: #3b82f6; color: white; }
+  .match-strong { background: #10b981; color: white; }
+  .match-core { background: #8b5cf6; color: white; }
+  .match-unknown { background: #6b7280; color: white; }
+  .story-card {
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .story-card:hover {
+    border-color: #3b82f6;
+    transform: translateY(-2px);
+  }
+  .tag-chip {
+    background: #334155;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 0.7rem;
+    margin-right: 4px;
+    margin-bottom: 4px;
+    display: inline-block;
+  }
+  .modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0,0,0,0.9);
+    z-index: 9999;
+    overflow-y: auto;
+    display: none;
+  }
+  .modal.active { display: block; }
+  .lightbox {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0,0,0,0.95);
+    z-index: 99999;
+    display: none;
+    justify-content: center;
+    align-items: center;
+  }
+  .lightbox.active { display: flex; }
+  .lightbox img {
+    max-width: 90vw;
+    max-height: 90vh;
+    object-fit: contain;
+  }
+  .awaiting-mining {
+    background: #422006;
+    border: 1px dashed #fb923c;
+    padding: 12px;
+    border-radius: 6px;
+    margin-top: 12px;
+    font-size: 0.85rem;
+  }
+  #shortcuts-panel {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #1e293b;
+    border: 2px solid #3b82f6;
+    border-radius: 12px;
+    padding: 24px;
+    z-index: 99998;
+    display: none;
+    max-width: 500px;
+    width: 90%;
+  }
+  #shortcuts-panel.active { display: block; }
+  .scene-tab {
+    cursor: pointer;
+    padding: 8px 16px;
+    border-radius: 6px;
+    margin-right: 8px;
+    background: #334155;
+  }
+  .scene-tab.active { background: #3b82f6; color: white; }
+</style>
+</head>
+<body class="p-4">
+
+<!-- README at top (hidden by default, toggle with button) -->
+<div id="readme" class="hidden bg-slate-800 border border-blue-400 rounded-lg p-6 mb-6 max-w-4xl mx-auto">
+  <h2 class="text-2xl font-bold text-blue-400 mb-4">📖 How to Use StoryMinerPro</h2>
+  <ol class="list-decimal list-inside space-y-2 text-sm">
+    <li>Open this HTML file by <strong>double-clicking</strong> it in your <code>/VIEW</code> folder.</li>
+    <li>The app will auto-load <code>default-corpus.json</code> from the same folder.</li>
+    <li>Use the <strong>search bar</strong> and <strong>filter toggles</strong> to navigate stories.</li>
+    <li>Click any card to open the <strong>Scene Reader</strong> with side-by-side wording comparison.</li>
+    <li><strong>Upload files</strong> (JSON/TXT/MD/RTF) using the "Upload" button — they'll merge into the grid instantly.</li>
+    <li><strong>Drag-drop images</strong> onto any story card to attach them (stored as base64).</li>
+    <li>Press <kbd>Shift + ?</kbd> to view keyboard shortcuts.</li>
+    <li>Adjust <strong>theme</strong>, <strong>column count</strong>, and <strong>sidebar collapse</strong> in Settings (gear icon).</li>
+  </ol>
+  <p class="mt-4 text-xs text-slate-400">All changes persist via localStorage. Refresh to reload default corpus.</p>
+</div>
+
+<!-- Global Filter Bar (sticky top) -->
+<div id="filter-bar" class="sticky top-0 bg-slate-900 border-b border-slate-700 p-4 z-50 mb-6">
+  <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-4">
+    <!-- Search -->
+    <div class="col-span-1 md:col-span-2">
+      <input 
+        type="text" 
+        id="search-input" 
+        placeholder="🔍 Search titles, tags, DNA..." 
+        class="w-full px-4 py-2 bg-slate-800 border border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-400 text-white"
+      />
+    </div>
+
+    <!-- Match Band Toggles -->
+    <div class="flex gap-2 items-center">
+      <button class="match-toggle match-pill match-excellent" data-band="excellent">Excellent</button>
+      <button class="match-toggle match-pill match-strong" data-band="strong">Strong</button>
+      <button class="match-toggle match-pill match-core" data-band="core">Core</button>
+    </div>
+
+    <!-- Sort Control -->
+    <div>
+      <select id="sort-control" class="w-full px-4 py-2 bg-slate-800 border border-slate-600 rounded-lg text-white">
+        <option value="score">Sort: Score (High→Low)</option>
+        <option value="alpha">Sort: Alphabetical</option>
+        <option value="review">Sort: Review State</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Results Counter & Actions -->
+  <div class="max-w-7xl mx-auto mt-4 flex justify-between items-center text-sm">
+    <div id="results-counter" class="text-slate-400">Loading...</div>
+    <div class="flex gap-2">
+      <button id="toggle-readme" class="px-3 py-1 bg-blue-600 rounded hover:bg-blue-700">📖 README</button>
+      <button id="upload-btn" class="px-3 py-1 bg-green-600 rounded hover:bg-green-700">📂 Upload Files</button>
+      <button id="settings-btn" class="px-3 py-1 bg-slate-600 rounded hover:bg-slate-700">⚙️ Settings</button>
+      <button id="shortcuts-btn" class="px-3 py-1 bg-slate-600 rounded hover:bg-slate-700">⌨️ Shortcuts</button>
+    </div>
+  </div>
+
+  <!-- Taxonomy Chip Cloud (dynamic, generated from stories) -->
+  <div id="taxonomy-chips" class="max-w-7xl mx-auto mt-4 flex flex-wrap gap-2"></div>
+</div>
+
+<!-- Story Grid (masonry-style, 3-4 columns) -->
+<div id="story-grid" class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
+  <!-- Story cards will be injected here -->
+</div>
+
+<!-- Scene Reader Modal -->
+<div id="scene-reader" class="modal">
+  <div class="max-w-6xl mx-auto bg-slate-800 rounded-lg mt-8 mb-8 p-6 relative">
+    <button id="close-reader" class="absolute top-4 right-4 text-2xl text-slate-400 hover:text-white">&times;</button>
+
+    <div id="reader-content" class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      <!-- Sidebar: Story Meta Panel -->
+      <div id="story-meta-panel" class="lg:col-span-1 bg-slate-900 p-4 rounded-lg">
+        <h2 id="reader-title" class="text-xl font-bold text-blue-400 mb-2"></h2>
+        <div id="reader-meta" class="text-sm space-y-2 text-slate-300"></div>
+        <div id="reader-images" class="mt-4"></div>
+        <div class="mt-4 space-y-2">
+          <button id="export-story-btn" class="w-full px-4 py-2 bg-green-600 rounded hover:bg-green-700 text-sm">📤 Export to StoryBuilder</button>
+          <button id="attach-image-btn" class="w-full px-4 py-2 bg-blue-600 rounded hover:bg-blue-700 text-sm">🖼️ Attach Image</button>
+        </div>
+      </div>
+
+      <!-- Main: Scene Comparator -->
+      <div id="scene-comparator" class="lg:col-span-3">
+        <div id="scene-tabs" class="flex mb-4"></div>
+        <div id="scene-content" class="space-y-4">
+          <!-- Scene wording comparisons will be injected here -->
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Image Lightbox -->
+<div id="lightbox" class="lightbox">
+  <button id="close-lightbox" class="absolute top-4 right-4 text-4xl text-white">&times;</button>
+  <button id="prev-img" class="absolute left-4 text-4xl text-white">‹</button>
+  <button id="next-img" class="absolute right-4 text-4xl text-white">›</button>
+  <img id="lightbox-img" src="" alt="Attached image" />
+</div>
+
+<!-- Keyboard Shortcuts Panel -->
+<div id="shortcuts-panel">
+  <h3 class="text-xl font-bold text-blue-400 mb-4">⌨️ Keyboard Shortcuts</h3>
+  <ul class="space-y-2 text-sm">
+    <li><kbd class="bg-slate-700 px-2 py-1 rounded">/</kbd> Focus search</li>
+    <li><kbd class="bg-slate-700 px-2 py-1 rounded">Esc</kbd> Close reader/lightbox/shortcuts</li>
+    <li><kbd class="bg-slate-700 px-2 py-1 rounded">←</kbd> <kbd class="bg-slate-700 px-2 py-1 rounded">→</kbd> Navigate cards (when reader open)</li>
+    <li><kbd class="bg-slate-700 px-2 py-1 rounded">Shift + ?</kbd> Toggle this panel</li>
+  </ul>
+  <button id="close-shortcuts" class="mt-4 w-full px-4 py-2 bg-slate-600 rounded hover:bg-slate-700">Close</button>
+</div>
+
+<!-- Settings Modal (simple overlay) -->
+<div id="settings-modal" class="modal">
+  <div class="max-w-md mx-auto bg-slate-800 rounded-lg mt-16 p-6 relative">
+    <button id="close-settings" class="absolute top-4 right-4 text-2xl text-slate-400 hover:text-white">&times;</button>
+    <h3 class="text-xl font-bold text-blue-400 mb-4">⚙️ Settings</h3>
+
+    <div class="space-y-4">
+      <div>
+        <label class="block text-sm mb-2">Theme</label>
+        <select id="theme-select" class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded text-white">
+          <option value="dark">Dark (Default)</option>
+          <option value="light">Light</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-sm mb-2">Grid Columns</label>
+        <select id="column-select" class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded text-white">
+          <option value="3">3 Columns</option>
+          <option value="4" selected>4 Columns</option>
+          <option value="5">5 Columns</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-sm mb-2">Card Density</label>
+        <select id="density-select" class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded text-white">
+          <option value="compact" selected>Compact</option>
+          <option value="comfortable">Comfortable</option>
+          <option value="spacious">Spacious</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="flex items-center">
+          <input type="checkbox" id="sidebar-collapse" class="mr-2" />
+          <span class="text-sm">Collapse Sidebar in Reader</span>
+        </label>
+      </div>
+    </div>
+
+    <button id="save-settings" class="mt-6 w-full px-4 py-2 bg-blue-600 rounded hover:bg-blue-700">Save Settings</button>
+  </div>
+</div>
+
+<!-- Hidden file input for uploads -->
+<input type="file" id="file-input" multiple accept=".json,.txt,.md,.rtf" class="hidden" />
+<input type="file" id="image-input" accept="image/*" class="hidden" />
+
+<script>
+// ========== STATE ==========
+let corpus = [];
+let filteredStories = [];
+let activeBands = new Set(['excellent', 'strong', 'core']);
+let searchQuery = '';
+let sortMode = 'score';
+let currentStoryIndex = -1;
+let settings = {
+  theme: 'dark',
+  columns: 4,
+  density: 'compact',
+  sidebarCollapse: false
+};
+
+// ========== INITIALIZATION ==========
+async function init() {
+  loadSettings();
+  applySettings();
+  await loadDefaultCorpus();
+  renderTaxonomyChips();
+  filterAndRender();
+  attachEventListeners();
+}
+
+// Load default-corpus.json
+async function loadDefaultCorpus() {
+  try {
+    const response = await fetch('default-corpus.json');
+    const data = await response.json();
+    corpus = data;
+    console.log(`✅ Loaded ${corpus.length} records from default-corpus.json`);
+  } catch (error) {
+    console.error('❌ Failed to load default-corpus.json:', error);
+    corpus = [];
+  }
+}
+
+// Load settings from localStorage
+function loadSettings() {
+  const saved = localStorage.getItem('storyMinePro_settings');
+  if (saved) {
+    settings = { ...settings, ...JSON.parse(saved) };
+  }
+}
+
+// Save settings to localStorage
+function saveSettings() {
+  localStorage.setItem('storyMinePro_settings', JSON.stringify(settings));
+  applySettings();
+}
+
+// Apply settings to UI
+function applySettings() {
+  document.getElementById('theme-select').value = settings.theme;
+  document.getElementById('column-select').value = settings.columns;
+  document.getElementById('density-select').value = settings.density;
+  document.getElementById('sidebar-collapse').checked = settings.sidebarCollapse;
+
+  // Apply theme (simple example: toggle body bg)
+  if (settings.theme === 'light') {
+    document.body.style.background = '#f1f5f9';
+    document.body.style.color = '#0f172a';
+  } else {
+    document.body.style.background = '#0f172a';
+    document.body.style.color = '#e2e8f0';
+  }
+
+  // Apply grid columns
+  const grid = document.getElementById('story-grid');
+  grid.className = `max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-${settings.columns} gap-4`;
+}
+
+// ========== FILTERING & RENDERING ==========
+function filterAndRender() {
+  filteredStories = corpus.filter(story => {
+    // Band filter
+    if (!activeBands.has(story.match_band)) return false;
+
+    // Search filter
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      const searchable = [
+        story.title,
+        story.dna || '',
+        (story.tags || []).join(' '),
+        story.characterEnergy || '',
+        story.toneRegister || ''
+      ].join(' ').toLowerCase();
+      if (!searchable.includes(query)) return false;
+    }
+
+    return true;
+  });
+
+  // Sort
+  if (sortMode === 'score') {
+    filteredStories.sort((a, b) => (b.zstyle_score || 0) - (a.zstyle_score || 0));
+  } else if (sortMode === 'alpha') {
+    filteredStories.sort((a, b) => a.title.localeCompare(b.title));
+  } else if (sortMode === 'review') {
+    filteredStories.sort((a, b) => a.review_state.localeCompare(b.review_state));
+  }
+
+  renderGrid();
+  updateCounter();
+}
+
+function renderGrid() {
+  const grid = document.getElementById('story-grid');
+  grid.innerHTML = '';
+
+  filteredStories.forEach((story, index) => {
+    const card = document.createElement('div');
+    card.className = 'story-card';
+    card.dataset.index = index;
+
+    // Match band pill
+    const bandClass = `match-${story.match_band}`;
+    const bandPill = `<span class="match-pill ${bandClass}">${story.match_band}</span>`;
+
+    // Review state indicator
+    const reviewBadge = story.review_state === 'awaiting_mining' 
+      ? '<span class="text-xs text-orange-400">⏳ Awaiting Mining</span>' 
+      : '';
+
+    // Tags (first 3 only)
+    const tags = (story.tags || []).slice(0, 3).map(t => `<span class="tag-chip">${t}</span>`).join('');
+
+    // Image preview (if attached)
+    const imagePreview = (story.images && story.images.length > 0)
+      ? `<img src="${story.images[0]}" class="w-full h-32 object-cover rounded mt-2" />`
+      : '';
+
+    card.innerHTML = `
+      <div class="flex justify-between items-start mb-2">
+        <h3 class="text-sm font-bold text-blue-400">${story.title}</h3>
+        ${bandPill}
+      </div>
+      <div class="text-xs text-slate-400 mb-2">Score: ${story.zstyle_score || 0} | ${story.source}</div>
+      ${reviewBadge}
+      <div class="mt-2">${tags}</div>
+      ${imagePreview}
+    `;
+
+    // Click to open reader
+    card.addEventListener('click', () => openReader(index));
+
+    // Drag-drop image attachment
+    card.addEventListener('dragover', (e) => e.preventDefault());
+    card.addEventListener('drop', (e) => {
+      e.preventDefault();
+      const files = e.dataTransfer.files;
+      if (files.length > 0) attachImageToStory(story, files[0]);
+    });
+
+    grid.appendChild(card);
+  });
+}
+
+function updateCounter() {
+  const counter = document.getElementById('results-counter');
+  counter.textContent = `Showing ${filteredStories.length} of ${corpus.length} stories`;
+}
+
+function renderTaxonomyChips() {
+  const chips = document.getElementById('taxonomy-chips');
+  const allTags = new Set();
+  corpus.forEach(s => (s.tags || []).forEach(t => allTags.add(t)));
+
+  chips.innerHTML = Array.from(allTags).slice(0, 20).map(tag => 
+    `<button class="tag-chip hover:bg-blue-600" data-tag="${tag}">${tag}</button>`
+  ).join('');
+
+  // Click to filter by tag
+  chips.querySelectorAll('button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      searchQuery = btn.dataset.tag;
+      document.getElementById('search-input').value = searchQuery;
+      filterAndRender();
+    });
+  });
+}
+
+// ========== SCENE READER ==========
+function openReader(index) {
+  currentStoryIndex = index;
+  const story = filteredStories[index];
+  const reader = document.getElementById('scene-reader');
+  const title = document.getElementById('reader-title');
+  const meta = document.getElementById('reader-meta');
+  const images = document.getElementById('reader-images');
+  const tabs = document.getElementById('scene-tabs');
+  const content = document.getElementById('scene-content');
+
+  title.textContent = story.title;
+
+  // Meta panel
+  meta.innerHTML = `
+    <p><strong>Source:</strong> ${story.source}</p>
+    <p><strong>Seed:</strong> ${story.seed}</p>
+    <p><strong>Match Band:</strong> <span class="match-pill match-${story.match_band}">${story.match_band}</span></p>
+    <p><strong>Score:</strong> ${story.zstyle_score || 0}</p>
+    <p><strong>Pose Family:</strong> ${Array.isArray(story.poseFamily) ? story.poseFamily.join(', ') : story.poseFamily}</p>
+    <p><strong>Review State:</strong> ${story.review_state}</p>
+    ${story.characterEnergy ? `<p><strong>Character:</strong> ${story.characterEnergy}</p>` : ''}
+    ${story.toneRegister ? `<p><strong>Tone:</strong> ${story.toneRegister}</p>` : ''}
+    ${story.dna ? `<p class="mt-2 text-xs text-slate-400">${story.dna}</p>` : ''}
+  `;
+
+  // Image gallery
+  if (story.images && story.images.length > 0) {
+    images.innerHTML = story.images.map((img, i) => 
+      `<img src="${img}" class="w-full rounded mt-2 cursor-pointer" data-index="${i}" />`
+    ).join('');
+    images.querySelectorAll('img').forEach(img => {
+      img.addEventListener('click', () => openLightbox(story.images, parseInt(img.dataset.index)));
+    });
+  } else {
+    images.innerHTML = '';
+  }
+
+  // Awaiting mining prompt
+  if (story.review_state === 'awaiting_mining') {
+    content.innerHTML = `
+      <div class="awaiting-mining">
+        <strong>⏳ This entry is awaiting mining.</strong><br>
+        ${story.raw_summary || story.raw_text || 'No preview available.'}
+      </div>
+    `;
+    tabs.innerHTML = '';
+  } else {
+    // Scene tabs (if mined)
+    const sceneCount = story.exactWording ? story.exactWording.length : 0;
+    if (sceneCount > 0) {
+      tabs.innerHTML = Array.from({ length: sceneCount }, (_, i) => 
+        `<button class="scene-tab ${i === 0 ? 'active' : ''}" data-scene="${i}">Scene ${i + 1}</button>`
+      ).join('');
+
+      tabs.querySelectorAll('button').forEach(btn => {
+        btn.addEventListener('click', () => {
+          tabs.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          renderScene(story, parseInt(btn.dataset.scene));
+        });
+      });
+
+      renderScene(story, 0);
+    } else {
+      tabs.innerHTML = '';
+      content.innerHTML = '<p class="text-slate-400">No scenes available.</p>';
+    }
+  }
+
+  reader.classList.add('active');
+}
+
+function renderScene(story, sceneIndex) {
+  const content = document.getElementById('scene-content');
+  const exact = (story.exactWording && story.exactWording[sceneIndex]) || 'No exact wording available.';
+  const reusable = (story.reusableWording && story.reusableWording[sceneIndex]) || 'No reusable wording available.';
+
+  content.innerHTML = `
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="bg-slate-900 p-4 rounded">
+        <h4 class="text-sm font-bold text-blue-400 mb-2">Exact Wording</h4>
+        <p class="text-sm text-slate-300">${exact}</p>
+      </div>
+      <div class="bg-slate-900 p-4 rounded">
+        <h4 class="text-sm font-bold text-green-400 mb-2">Reusable Wording</h4>
+        <p class="text-sm text-slate-300">${reusable}</p>
+      </div>
+    </div>
+  `;
+}
+
+function closeReader() {
+  document.getElementById('scene-reader').classList.remove('active');
+  currentStoryIndex = -1;
+}
+
+// ========== IMAGE ATTACHMENT ==========
+function attachImageToStory(story, file) {
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    if (!story.images) story.images = [];
+    story.images.push(e.target.result);
+    saveCorpusToLocalStorage();
+    filterAndRender();
+    console.log(`✅ Image attached to "${story.title}"`);
+  };
+  reader.readAsDataURL(file);
+}
+
+function openLightbox(images, index) {
+  const lightbox = document.getElementById('lightbox');
+  const img = document.getElementById('lightbox-img');
+  let currentIndex = index;
+
+  function show() {
+    img.src = images[currentIndex];
+  }
+
+  show();
+  lightbox.classList.add('active');
+
+  document.getElementById('prev-img').onclick = () => {
+    currentIndex = (currentIndex - 1 + images.length) % images.length;
+    show();
+  };
+
+  document.getElementById('next-img').onclick = () => {
+    currentIndex = (currentIndex + 1) % images.length;
+    show();
+  };
+}
+
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('active');
+}
+
+// ========== EXPORT TO STORYBUILDER ==========
+function exportToStoryBuilder() {
+  if (currentStoryIndex === -1) return;
+  const story = filteredStories[currentStoryIndex];
+
+  let markdown = `# ${story.title}\n\n`;
+  markdown += `**Source:** ${story.source}\n`;
+  markdown += `**Seed:** ${story.seed}\n`;
+  markdown += `**Match Band:** ${story.match_band}\n\n`;
+
+  if (story.reusableWording && story.reusableWording.length > 0) {
+    markdown += `## Reusable Scenes\n\n`;
+    story.reusableWording.forEach((scene, i) => {
+      markdown += `### Scene ${i + 1}\n${scene}\n\n`;
+    });
+  }
+
+  // Download as .md file
+  const blob = new Blob([markdown], { type: 'text/markdown' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${story.title.replace(/[^a-z0-9]/gi, '-')}.md`;
+  a.click();
+  URL.revokeObjectURL(url);
+
+  console.log(`✅ Exported "${story.title}" to StoryBuilder format`);
+}
+
+// ========== FILE UPLOAD ==========
+function uploadFiles() {
+  document.getElementById('file-input').click();
+}
+
+document.getElementById('file-input').addEventListener('change', (e) => {
+  const files = e.target.files;
+  Array.from(files).forEach(file => {
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const text = event.target.result;
+        let parsed;
+
+        if (file.name.endsWith('.json')) {
+          parsed = JSON.parse(text);
+          if (Array.isArray(parsed)) {
+            corpus.push(...parsed);
+          } else {
+            corpus.push(parsed);
+          }
+        } else {
+          // Text/MD/RTF
+          corpus.push({
+            id: `uploaded-${Date.now()}`,
+            title: file.name,
+            type: 'raw',
+            seed: 'uploaded',
+            match_band: 'unknown',
+            zstyle_score: 0,
+            review_state: 'awaiting_mining',
+            poseFamily: [],
+            tags: ['uploaded'],
+            raw_text: text.substring(0, 2000),
+            full_text: text,
+            source: 'user-upload'
+          });
+        }
+
+        saveCorpusToLocalStorage();
+        filterAndRender();
+        console.log(`✅ Uploaded: ${file.name}`);
+      } catch (error) {
+        console.error(`❌ Failed to parse ${file.name}:`, error);
+      }
+    };
+    reader.readAsText(file);
+  });
+});
+
+// ========== LOCALSTORAGE PERSISTENCE ==========
+function saveCorpusToLocalStorage() {
+  localStorage.setItem('storyMinePro_corpus', JSON.stringify(corpus));
+}
+
+function loadCorpusFromLocalStorage() {
+  const saved = localStorage.getItem('storyMinePro_corpus');
+  if (saved) {
+    corpus = JSON.parse(saved);
+  }
+}
+
+// ========== EVENT LISTENERS ==========
+function attachEventListeners() {
+  // Search
+  const searchInput = document.getElementById('search-input');
+  searchInput.addEventListener('input', (e) => {
+    searchQuery = e.target.value.trim();
+    filterAndRender();
+  });
+
+  // Match band toggles
+  document.querySelectorAll('.match-toggle').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const band = btn.dataset.band;
+      if (activeBands.has(band)) {
+        activeBands.delete(band);
+        btn.style.opacity = '0.3';
+      } else {
+        activeBands.add(band);
+        btn.style.opacity = '1';
+      }
+      filterAndRender();
+    });
+  });
+
+  // Sort control
+  document.getElementById('sort-control').addEventListener('change', (e) => {
+    sortMode = e.target.value;
+    filterAndRender();
+  });
+
+  // Close reader
+  document.getElementById('close-reader').addEventListener('click', closeReader);
+
+  // Close lightbox
+  document.getElementById('close-lightbox').addEventListener('click', closeLightbox);
+
+  // Export to StoryBuilder
+  document.getElementById('export-story-btn').addEventListener('click', exportToStoryBuilder);
+
+  // Attach image
+  document.getElementById('attach-image-btn').addEventListener('click', () => {
+    document.getElementById('image-input').click();
+  });
+
+  document.getElementById('image-input').addEventListener('change', (e) => {
+    if (currentStoryIndex === -1) return;
+    const file = e.target.files[0];
+    if (file) {
+      attachImageToStory(filteredStories[currentStoryIndex], file);
+      openReader(currentStoryIndex); // Refresh reader
+    }
+  });
+
+  // Upload files
+  document.getElementById('upload-btn').addEventListener('click', uploadFiles);
+
+  // Settings
+  document.getElementById('settings-btn').addEventListener('click', () => {
+    document.getElementById('settings-modal').classList.add('active');
+  });
+  document.getElementById('close-settings').addEventListener('click', () => {
+    document.getElementById('settings-modal').classList.remove('active');
+  });
+  document.getElementById('save-settings').addEventListener('click', () => {
+    settings.theme = document.getElementById('theme-select').value;
+    settings.columns = parseInt(document.getElementById('column-select').value);
+    settings.density = document.getElementById('density-select').value;
+    settings.sidebarCollapse = document.getElementById('sidebar-collapse').checked;
+    saveSettings();
+    document.getElementById('settings-modal').classList.remove('active');
+  });
+
+  // Shortcuts
+  document.getElementById('shortcuts-btn').addEventListener('click', () => {
+    document.getElementById('shortcuts-panel').classList.add('active');
+  });
+  document.getElementById('close-shortcuts').addEventListener('click', () => {
+    document.getElementById('shortcuts-panel').classList.remove('active');
+  });
+
+  // README toggle
+  document.getElementById('toggle-readme').addEventListener('click', () => {
+    const readme = document.getElementById('readme');
+    readme.classList.toggle('hidden');
+  });
+
+  // Keyboard shortcuts
+  document.addEventListener('keydown', (e) => {
+    // Shift + ? → toggle shortcuts panel
+    if (e.shiftKey && e.key === '?') {
+      e.preventDefault();
+      const panel = document.getElementById('shortcuts-panel');
+      panel.classList.toggle('active');
+    }
+
+    // / → focus search
+    if (e.key === '/' && !e.ctrlKey && !e.metaKey) {
+      e.preventDefault();
+      searchInput.focus();
+    }
+
+    // Esc → close everything
+    if (e.key === 'Escape') {
+      closeReader();
+      closeLightbox();
+      document.getElementById('shortcuts-panel').classList.remove('active');
+      document.getElementById('settings-modal').classList.remove('active');
+    }
+
+    // Arrow keys → navigate cards (when reader open)
+    if (currentStoryIndex !== -1) {
+      if (e.key === 'ArrowLeft' && currentStoryIndex > 0) {
+        openReader(currentStoryIndex - 1);
+      } else if (e.key === 'ArrowRight' && currentStoryIndex < filteredStories.length - 1) {
+        openReader(currentStoryIndex + 1);
+      }
+    }
+  });
+}
+
+// ========== START ==========
+init();
+</script>
+
+</body>
+</html>

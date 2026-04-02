@@ -64,6 +64,30 @@
 | `06_Prompt4IdeaBulletin.html` | `JOB/Prompt4IdeaBulletin.html` |
 | `06_Prompt5TwoStepOutline+Safeguards.html` | `JOB/Prompt5TwoStepOutline+Safeguards.html` |
 
+## Batch 07 — Legacy StoryMiner / stray copies (7 files)
+
+| File in GEMINI | Original Path |
+|----------------|--------------|
+| `07_trash_StoryMinerPro.html` | `trash/StoryMinerPro.html` |
+| `07_VIEW_storyminerpro.html` | `VIEW/storyminerpro.html` |
+| `07_trash_StoryMinerPro_Visual.html` | `trash/StoryMinerPro_Visual.html` |
+| `07_trash_story-library_v1_fixed.html` | `trash/story-library_v1_fixed.html` |
+| `07_trash_storyminerpro-all-storiesv3.html` | `trash/storyminerpro-all-storiesv3.html` |
+| `07_trash_storyminerpro-all-storiesv2.html` | `trash/storyminerpro-all-storiesv2.html` |
+| `07_trash_storyminerpro-all-stories.html` | `trash/storyminerpro-all-stories.html` |
+
+## Batch 08 — Legacy grader / trash variants (8 files)
+
+| File in GEMINI | Original Path |
+|----------------|--------------|
+| `08_trash_zlata-style-graderv4.html` | `trash/zlata-style-graderv4.html` |
+| `08_trash_zlata-interactive-grader.html` | `trash/zlata-interactive-grader.html` |
+| `08_trash_StoryMinerPro_X_WRITER_dupe.html` | `trash/StoryMinerPro_X_WRITER_dupe.html` |
+| `08_trash_zlata-grader-suite.html` | `trash/zlata-grader-suite.html` |
+| `08_trash_zlata-style-graderv3.html` | `trash/zlata-style-graderv3.html` |
+| `08_trash_zlata-style-graderv2.html` | `trash/zlata-style-graderv2.html` |
+| `08_trash_storyminer.html` | `trash/storyminer.html` |
+| `08_trash_zlata-story-graderv1.html` | `trash/zlata-story-graderv1.html` |
 ---
 
 ## Naming Convention Note

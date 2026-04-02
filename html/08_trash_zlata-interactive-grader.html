@@ -1,0 +1,422 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Zlata Interactive Grader</title>
+  <link rel="preconnect" href="https://api.fontshare.com">
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&f[]=boska@400,500,700&display=swap" rel="stylesheet">
+  <style>
+    :root,[data-theme="light"]{--text-xs:clamp(.75rem,.7rem + .25vw,.875rem);--text-sm:clamp(.875rem,.8rem + .35vw,1rem);--text-base:clamp(1rem,.95rem + .25vw,1.125rem);--text-lg:clamp(1.125rem,1rem + .75vw,1.5rem);--text-xl:clamp(1.5rem,1.2rem + 1.25vw,2.25rem);--space-1:.25rem;--space-2:.5rem;--space-3:.75rem;--space-4:1rem;--space-5:1.25rem;--space-6:1.5rem;--space-8:2rem;--space-10:2.5rem;--space-12:3rem;--space-16:4rem;--color-bg:#f7f6f2;--color-surface:#f9f8f5;--color-surface-2:#fbfbf9;--color-surface-offset:#f3f0ec;--color-border:#d4d1ca;--color-divider:#dcd9d5;--color-text:#28251d;--color-text-muted:#7a7974;--color-text-faint:#bab9b4;--color-text-inverse:#f9f8f4;--color-primary:#01696f;--color-primary-hover:#0c4e54;--color-primary-highlight:#cedcd8;--color-success:#437a22;--color-warning:#964219;--color-danger:#a12c7b;--radius-sm:.375rem;--radius-md:.5rem;--radius-lg:.75rem;--radius-xl:1rem;--radius-full:9999px;--shadow-sm:0 1px 2px rgba(0,0,0,.06);--shadow-md:0 4px 12px rgba(0,0,0,.08);--shadow-lg:0 12px 32px rgba(0,0,0,.12);--font-display:'Boska',Georgia,serif;--font-body:'Satoshi',Inter,sans-serif}
+    [data-theme="dark"]{--color-bg:#171614;--color-surface:#1c1b19;--color-surface-2:#201f1d;--color-surface-offset:#1d1c1a;--color-border:#393836;--color-divider:#262523;--color-text:#cdccca;--color-text-muted:#979591;--color-text-faint:#5a5957;--color-text-inverse:#2b2a28;--color-primary:#4f98a3;--color-primary-hover:#227f8b;--color-primary-highlight:#313b3b;--color-success:#6daa45;--color-warning:#bb653b;--color-danger:#d163a7;--shadow-sm:0 1px 2px rgba(0,0,0,.2);--shadow-md:0 4px 12px rgba(0,0,0,.3);--shadow-lg:0 12px 32px rgba(0,0,0,.4)}
+    *{box-sizing:border-box;margin:0;padding:0}html{-webkit-font-smoothing:antialiased;scroll-behavior:smooth}body{background:var(--color-bg);color:var(--color-text);font:400 var(--text-base)/1.55 var(--font-body);min-height:100dvh}img{display:block;max-width:100%;height:auto}input,textarea,select,button{font:inherit;color:inherit}button{cursor:pointer}a{color:inherit}textarea{resize:vertical}
+    .layout{display:grid;grid-template-columns:280px 1fr;min-height:100dvh}.sidebar{position:sticky;top:0;height:100dvh;overflow:auto;padding:var(--space-6);background:var(--color-surface);border-right:1px solid var(--color-border)}.main{padding:var(--space-6)}
+    .brand{display:flex;align-items:center;gap:var(--space-3);margin-bottom:var(--space-8)}.logo{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:var(--color-primary);color:var(--color-text-inverse);box-shadow:var(--shadow-sm)}.logo svg{width:24px;height:24px}.brand h1{font:700 var(--text-lg)/1.1 var(--font-body)}.brand p{font-size:var(--text-xs);color:var(--color-text-muted)}
+    .nav{display:grid;gap:var(--space-2)}.nav a{padding:.8rem .9rem;border-radius:var(--radius-md);text-decoration:none;border:1px solid transparent;color:var(--color-text-muted)}.nav a:hover,.nav a.active{background:var(--color-surface-2);border-color:var(--color-border);color:var(--color-text)}
+    .side-actions{display:grid;gap:var(--space-3);margin-top:var(--space-8)}
+    .hero{display:grid;gap:var(--space-5);background:linear-gradient(135deg,var(--color-surface),var(--color-surface-offset));border:1px solid var(--color-border);border-radius:var(--radius-xl);padding:var(--space-8);margin-bottom:var(--space-8)}
+    .eyebrow{font-size:var(--text-xs);font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--color-primary)}.hero h2{font:500 var(--text-xl)/1.02 var(--font-display);max-width:12ch}.hero p{color:var(--color-text-muted);max-width:75ch}
+    .hero-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--space-4)}.stat{background:var(--color-surface-2);border:1px solid var(--color-border);border-radius:var(--radius-lg);padding:var(--space-4)}.stat strong{display:block;font-size:var(--text-lg)}.section{margin-bottom:var(--space-8)}.section h3{font:700 var(--text-lg)/1.2 var(--font-body);margin-bottom:var(--space-2)}.section p.section-intro{margin-bottom:var(--space-4);color:var(--color-text-muted);max-width:72ch}
+    .grid-2{display:grid;grid-template-columns:1.05fr .95fr;gap:var(--space-6)}.panel{background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-xl);box-shadow:var(--shadow-sm);padding:var(--space-5)}.panel h4{margin-bottom:var(--space-4)}
+    .form-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:var(--space-4)}.full{grid-column:1/-1}.field{display:grid;gap:var(--space-2)}label{font-size:var(--text-sm);font-weight:700}input,textarea,select{width:100%;padding:.8rem .9rem;border-radius:var(--radius-md);border:1px solid var(--color-border);background:var(--color-surface-2)}textarea{min-height:110px}.small{font-size:var(--text-xs);color:var(--color-text-muted)}
+    .range-wrap{display:grid;gap:var(--space-2)}.range-head{display:flex;justify-content:space-between;gap:var(--space-3)}input[type="range"]{padding:0;border:none;background:transparent}
+    .btn-row{display:flex;flex-wrap:wrap;gap:var(--space-3)}.btn{padding:.85rem 1rem;border-radius:var(--radius-md);border:none;background:var(--color-primary);color:var(--color-text-inverse)}.btn.secondary{background:var(--color-surface-2);color:var(--color-text);border:1px solid var(--color-border)}.btn.warn{background:var(--color-warning);color:var(--color-text-inverse)}
+    .score-box{display:grid;grid-template-columns:160px 1fr;gap:var(--space-4);align-items:center}.score-ring{aspect-ratio:1;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--color-primary) 0deg,var(--color-primary) calc(var(--score)*3.6deg),var(--color-surface-offset) 0deg);padding:10px}.score-inner{border-radius:50%;background:var(--color-surface);display:grid;place-items:center;height:100%}.score-inner strong{font-size:2rem}.badge-row{display:flex;flex-wrap:wrap;gap:var(--space-2);margin-top:var(--space-3)}.badge{padding:.35rem .6rem;border-radius:var(--radius-full);background:var(--color-primary-highlight);font-size:var(--text-xs)}
+    .gallery-controls{display:flex;flex-wrap:wrap;gap:var(--space-3);align-items:center;margin-bottom:var(--space-4)}.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:var(--space-3)}.thumb{position:relative;border:1px solid var(--color-border);border-radius:var(--radius-lg);overflow:hidden;background:var(--color-surface-2)}.thumb img{width:100%;height:110px;object-fit:cover}.thumb .meta{padding:.45rem .55rem;font-size:12px;color:var(--color-text-muted)}.thumb button{position:absolute;top:8px;right:8px;background:rgba(0,0,0,.7);color:#fff;border:none;border-radius:999px;width:28px;height:28px}
+    .table-wrap{overflow:auto;border:1px solid var(--color-border);border-radius:var(--radius-xl);background:var(--color-surface)}table{width:100%;border-collapse:collapse;min-width:980px}th,td{padding:.8rem .85rem;border-bottom:1px solid var(--color-divider);text-align:left;vertical-align:top}th{background:var(--color-surface-2);font-size:var(--text-sm)}tbody tr:hover{background:rgba(1,105,111,.04)}.mini-thumb{width:56px;height:56px;border-radius:12px;object-fit:cover;border:1px solid var(--color-border);background:var(--color-surface-2)}
+    .lightbox{position:fixed;inset:0;background:rgba(0,0,0,.78);display:none;align-items:center;justify-content:center;padding:var(--space-6);z-index:30}.lightbox.open{display:flex}.lightbox-inner{max-width:min(1100px,95vw);max-height:92vh;background:#111;padding:var(--space-4);border-radius:var(--radius-xl)}.lightbox img{max-height:80vh;width:auto;margin-inline:auto}.close-x{position:absolute;top:20px;right:20px;background:#111;color:#fff;border:1px solid #555;border-radius:999px;width:42px;height:42px}
+    .prompt-box{white-space:pre-wrap;background:#121212;color:#f5f5f0;border-radius:var(--radius-lg);padding:var(--space-5);font-size:14px;max-height:320px;overflow:auto;border:1px solid #333}
+    .muted{color:var(--color-text-muted)}
+    @media (max-width:1100px){.layout{grid-template-columns:1fr}.sidebar{position:relative;height:auto;border-right:none;border-bottom:1px solid var(--color-border)}.grid-2,.form-grid,.hero-stats,.score-box{grid-template-columns:1fr}.main{padding:var(--space-4)}}
+  </style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="logo" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 5h12"/><path d="M8 5c0 7 8 7 8 14"/><path d="M16 19H8"/><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/></svg>
+      </div>
+      <div>
+        <h1>Zlata Interactive Grader</h1>
+        <p>Stories, scores, ranking, and images</p>
+      </div>
+    </div>
+    <nav class="nav">
+      <a href="#grader" class="active">Grader</a>
+      <a href="#images">Images</a>
+      <a href="#ranking">Ranking board</a>
+      <a href="#prompt">Prompt</a>
+    </nav>
+    <div class="side-actions">
+      <button class="btn secondary" id="themeToggle">Toggle light / dark</button>
+      <button class="btn secondary" id="newRecordBtn">New record</button>
+      <button class="btn secondary" id="exportRecordBtn">Export current JSON</button>
+      <button class="btn secondary" id="exportAllBtn">Export ranking JSON</button>
+      <label class="btn secondary" for="importJson" style="display:block;text-align:center">Import ranking JSON</label>
+      <input id="importJson" type="file" accept="application/json" hidden>
+    </div>
+  </aside>
+  <main class="main">
+    <section class="hero">
+      <div class="eyebrow">Interactive version</div>
+      <h2>Grade stories, attach images, and rank the whole corpus in one place.</h2>
+      <p>This app is built as a text-first grader with optional image support. You can upload or paste story text, score it against your rubric, attach reference images, save the result into a multi-story ranking table, and export everything as portable JSON.</p>
+      <div class="hero-stats">
+        <div class="stat"><strong>Text-first</strong><span>Rubric and notes remain the core evaluation layer.</span></div>
+        <div class="stat"><strong>Image-ready</strong><span>Attach visual references, thumbnails, and captions to each record.</span></div>
+        <div class="stat"><strong>Ranking board</strong><span>Compare many stories side by side and sort by score.</span></div>
+        <div class="stat"><strong>Portable</strong><span>Import and export JSON for long-term corpus building.</span></div>
+      </div>
+    </section>
+
+    <section class="section" id="grader">
+      <h3>Story grader</h3>
+      <p class="section-intro">Create one structured record at a time. Fill the metadata, paste or import the story text if you want it stored in the record, grade the rubric, then save it to the ranking board.</p>
+      <div class="grid-2">
+        <div class="panel">
+          <h4>Metadata and text</h4>
+          <div class="form-grid">
+            <div class="field"><label for="title">Title</label><input id="title" placeholder="Story title"></div>
+            <div class="field"><label for="author">Author</label><input id="author" placeholder="Author"></div>
+            <div class="field"><label for="source">Source</label><input id="source" placeholder="Zlata.de, Lush Stories, etc."></div>
+            <div class="field"><label for="url">URL</label><input id="url" placeholder="https://..."></div>
+            <div class="field"><label for="length">Estimated length</label><select id="length"><option>unknown</option><option>short</option><option>medium</option><option>long</option></select></div>
+            <div class="field"><label for="pov">POV</label><select id="pov"><option>unknown</option><option>male_first</option><option>male_third</option><option>female_first</option><option>female_third</option><option>mixed</option></select></div>
+            <div class="field"><label for="setup">Setup type</label><select id="setup"><option>discovery</option><option>dating</option><option>professional</option><option>training</option><option>performance</option><option>domestic</option><option>other</option></select></div>
+            <div class="field"><label for="tier">Tier guess</label><select id="tier"><option>tier1</option><option>tier2</option><option>adjacent</option><option>false_positive</option></select></div>
+            <div class="field full"><label for="storyText">Story text or excerpt</label><textarea id="storyText" placeholder="Paste the story text, excerpt, or your working notes here."></textarea></div>
+            <div class="field full"><label for="notes">Notes</label><textarea id="notes" placeholder="Explain why it matches or fails the corpus. Mention standout scenes, dynamics, or disqualifying traits."></textarea></div>
+            <div class="field full"><label for="keyMoves">Key moves</label><input id="keyMoves" placeholder="oversplit, triple fold, throughbend, legs-behind-head"></div>
+            <div class="field full"><label for="keyTags">Key tags</label><input id="keyTags" placeholder="discovery, gymnast, passive training, voyeuristic"></div>
+            <div class="field full"><label for="warnings">Warnings / flags</label><input id="warnings" placeholder="magic, coercive_dynamic, body_horror, flexibility_incidental"></div>
+            <div class="field full"><label for="verdict">One-sentence verdict</label><input id="verdict" placeholder="Closest match to Dreamgirl-style discovery arc, but weaker chemistry."></div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h4>Rubric and score</h4>
+          <div id="ranges"></div>
+          <div class="panel" style="margin-top:1rem;padding:1rem;--score:0" id="scorePanel">
+            <div class="score-box">
+              <div class="score-ring" id="scoreRing" style="--score:0"><div class="score-inner"><div><strong id="scoreValue">0.0</strong><div class="small">out of 10</div></div></div></div>
+              <div>
+                <h4 style="margin-bottom:.35rem">Live interpretation</h4>
+                <p id="scoreText" class="muted">Start grading to generate a weighted Zlata-match score.</p>
+                <div class="badge-row" id="scoreBadges"></div>
+              </div>
+            </div>
+          </div>
+          <div class="btn-row" style="margin-top:1rem">
+            <button class="btn" id="saveRankingBtn">Add / update ranking</button>
+            <button class="btn secondary" id="fillDemoBtn">Load demo example</button>
+            <button class="btn secondary" id="clearFormBtn">Clear form</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="images">
+      <h3>Image support</h3>
+      <p class="section-intro">Add optional visual references to a story record. Images can be used as pose evidence, reference stills, cover-style thumbnails, or memory anchors in the ranking board.</p>
+      <div class="panel">
+        <div class="gallery-controls">
+          <label class="btn secondary" for="imageInput">Add image files</label>
+          <input id="imageInput" type="file" accept="image/*" multiple hidden>
+          <input id="imageCaption" placeholder="Default caption for newly added images" style="max-width:360px">
+          <div class="small">Images are stored in-browser in the current page session and included in JSON exports.</div>
+        </div>
+        <div class="gallery" id="gallery"></div>
+      </div>
+    </section>
+
+    <section class="section" id="ranking">
+      <h3>Ranking board</h3>
+      <p class="section-intro">Each saved record appears here. The board sorts automatically by overall Zlata-match score so your strongest candidates rise to the top.</p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Img</th><th>Title</th><th>Author</th><th>Source</th><th>Score</th><th>Tier</th><th>Setup</th><th>POV</th><th>Tags</th><th>Verdict</th><th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="rankingBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="section" id="prompt">
+      <h3>Perplexity Computer prompt</h3>
+      <p class="section-intro">Use this to pre-structure a story grade before pasting the result into the app.</p>
+      <div class="btn-row" style="margin-bottom:1rem"><button class="btn secondary" id="copyPromptBtn">Copy prompt</button></div>
+      <div class="prompt-box" id="promptBox">You are helping build a structured Zlata-style fiction corpus.
+
+Read one uploaded story and return:
+1. A short structured analysis with these headings: Core premise, POV and dynamic, Flexibility emphasis, Erotic tone, Best-matching Zlata elements, Major mismatches or warnings, Final judgment.
+2. One clean JSON object using this schema:
+{
+  "title": "",
+  "author": "",
+  "source": "",
+  "url": "",
+  "estimated_length": "short|medium|long|unknown",
+  "pov": "male_first|male_third|female_first|female_third|mixed|unknown",
+  "setup_type": "discovery|dating|professional|training|performance|domestic|other",
+  "male_discovery_dynamic_score": 0,
+  "female_flexibility_centrality_score": 0,
+  "technical_move_vocabulary_score": 0,
+  "passive_training_or_assisted_stretching_score": 0,
+  "voyeuristic_fascination_score": 0,
+  "romantic_or_erotic_chemistry_score": 0,
+  "consensual_tone_score": 0,
+  "writing_quality_score": 0,
+  "zlata_style_match_score": 0,
+  "tier_guess": "tier1|tier2|adjacent|false_positive",
+  "key_moves": [],
+  "key_tags": [],
+  "warnings": [],
+  "notes": "",
+  "one_sentence_verdict": ""
+}
+Be conservative. Flag major deviations like magic, body-horror, coercion, or flexibility being incidental rather than central.</div>
+    </section>
+  </main>
+</div>
+
+<div class="lightbox" id="lightbox">
+  <button class="close-x" id="closeLightbox">×</button>
+  <div class="lightbox-inner"><img id="lightboxImg" alt="Expanded reference image"></div>
+</div>
+
+<script>
+const rubricConfig = [
+  ['male_discovery_dynamic_score','Male discovery dynamic',1.35],
+  ['female_flexibility_centrality_score','Female flexibility centrality',1.4],
+  ['technical_move_vocabulary_score','Technical move vocabulary',1.1],
+  ['passive_training_or_assisted_stretching_score','Passive training / assisted stretching',1.05],
+  ['voyeuristic_fascination_score','Voyeuristic fascination',1.0],
+  ['romantic_or_erotic_chemistry_score','Romantic / erotic chemistry',1.2],
+  ['consensual_tone_score','Consensual tone',0.95],
+  ['writing_quality_score','Writing quality',0.95]
+];
+
+const state = { currentId: null, ranking: [], images: [] };
+const $ = id => document.getElementById(id);
+const fields = ['title','author','source','url','length','pov','setup','tier','storyText','notes','keyMoves','keyTags','warnings','verdict'];
+
+function buildRanges(){
+  const wrap = $('ranges');
+  wrap.innerHTML = '';
+  rubricConfig.forEach(([key,label]) => {
+    const div = document.createElement('div');
+    div.className = 'range-wrap';
+    div.innerHTML = `<div class="range-head"><label for="${key}">${label}</label><span id="${key}_val">5</span></div><input type="range" min="0" max="10" step="1" value="5" id="${key}">`;
+    wrap.appendChild(div);
+    div.querySelector('input').addEventListener('input', e => { $(key + '_val').textContent = e.target.value; updateScore(); });
+  });
+}
+
+function calcScore(){
+  let total = 0, weights = 0;
+  const badges = [];
+  rubricConfig.forEach(([key,label,weight]) => {
+    const v = Number($(key).value || 0);
+    total += v * weight; weights += weight;
+    if (v >= 8) badges.push(label);
+  });
+  return { score: +(total / weights).toFixed(1), badges };
+}
+
+function scoreInterpretation(score){
+  if (score >= 8.8) return 'Excellent corpus fit. Likely Tier 1 and worth prioritizing.';
+  if (score >= 7.4) return 'Strong match with some limitations. Likely Tier 1 or high Tier 2.';
+  if (score >= 6.0) return 'Partial match. Useful comparator or Tier 2 / adjacent candidate.';
+  if (score >= 4.5) return 'Weak or mixed match. Review notes carefully before keeping in core corpus.';
+  return 'Low corpus fit. Probably a false positive, side branch, or non-core sub-genre.';
+}
+
+function updateScore(){
+  const { score, badges } = calcScore();
+  $('scoreValue').textContent = score.toFixed(1);
+  $('scoreText').textContent = scoreInterpretation(score);
+  $('scoreRing').style.setProperty('--score', score);
+  $('scoreBadges').innerHTML = badges.map(b => `<span class="badge">${b}</span>`).join('');
+}
+
+function getRecord(){
+  const { score } = calcScore();
+  return {
+    id: state.currentId || crypto.randomUUID(),
+    title: $('title').value.trim(),
+    author: $('author').value.trim(),
+    source: $('source').value.trim(),
+    url: $('url').value.trim(),
+    estimated_length: $('length').value,
+    pov: $('pov').value,
+    setup_type: $('setup').value,
+    tier_guess: $('tier').value,
+    story_text: $('storyText').value,
+    notes: $('notes').value,
+    key_moves: splitCSV($('keyMoves').value),
+    key_tags: splitCSV($('keyTags').value),
+    warnings: splitCSV($('warnings').value),
+    one_sentence_verdict: $('verdict').value,
+    zlata_style_match_score: score,
+    images: structuredClone(state.images)
+  };
+}
+
+function splitCSV(v){ return v.split(',').map(x => x.trim()).filter(Boolean); }
+
+function clearForm(){
+  state.currentId = null; state.images = [];
+  fields.forEach(id => $(id).value = '');
+  $('length').value = 'unknown'; $('pov').value = 'unknown'; $('setup').value = 'discovery'; $('tier').value = 'tier1';
+  rubricConfig.forEach(([key]) => { $(key).value = 5; $(key + '_val').textContent = 5; });
+  renderGallery(); updateScore();
+}
+
+function fillDemo(){
+  clearForm();
+  $('title').value = 'Demo Story'; $('author').value = 'Anonymous'; $('source').value = 'Sample Archive'; $('setup').value = 'discovery'; $('pov').value = 'male_first'; $('tier').value = 'tier1';
+  $('notes').value = 'Everyday-man discovery arc, strong flexibility emphasis, sensual training dynamic, and clear technical position vocabulary.';
+  $('keyMoves').value = 'oversplit, triple fold, throughbend, legs-behind-head';
+  $('keyTags').value = 'discovery, gymnast, passive training, voyeuristic, romantic';
+  $('verdict').value = 'Excellent seed-style match with strong chemistry and position-centered erotic tension.';
+  const values = {male_discovery_dynamic_score:9,female_flexibility_centrality_score:10,technical_move_vocabulary_score:9,passive_training_or_assisted_stretching_score:8,voyeuristic_fascination_score:8,romantic_or_erotic_chemistry_score:9,consensual_tone_score:10,writing_quality_score:8};
+  rubricConfig.forEach(([key]) => { $(key).value = values[key]; $(key + '_val').textContent = values[key]; });
+  updateScore();
+}
+
+function renderGallery(){
+  const gallery = $('gallery');
+  gallery.innerHTML = '';
+  if (!state.images.length){ gallery.innerHTML = '<div class="small muted">No images added yet.</div>'; return; }
+  state.images.forEach((img, idx) => {
+    const el = document.createElement('div');
+    el.className = 'thumb';
+    el.innerHTML = `<button type="button" data-remove="${idx}" aria-label="Remove image">×</button><img src="${img.data}" alt="Reference image ${idx + 1}" loading="lazy"><div class="meta">${escapeHtml(img.caption || 'Reference image')}</div>`;
+    el.querySelector('img').addEventListener('click', ()=> openLightbox(img.data));
+    el.querySelector('button').addEventListener('click', ()=> { state.images.splice(idx,1); renderGallery(); });
+    gallery.appendChild(el);
+  });
+}
+
+function saveRanking(){
+  const rec = getRecord();
+  if (!rec.title) { alert('Please add at least a title before saving.'); return; }
+  const idx = state.ranking.findIndex(r => r.id === rec.id);
+  if (idx >= 0) state.ranking[idx] = rec; else state.ranking.push(rec);
+  state.currentId = rec.id;
+  state.ranking.sort((a,b) => b.zlata_style_match_score - a.zlata_style_match_score);
+  renderRanking();
+}
+
+function renderRanking(){
+  const body = $('rankingBody'); body.innerHTML = '';
+  if (!state.ranking.length){ body.innerHTML = '<tr><td colspan="11" class="muted">No records saved yet.</td></tr>'; return; }
+  state.ranking.forEach(rec => {
+    const tr = document.createElement('tr');
+    const primary = rec.images?.[0]?.data;
+    tr.innerHTML = `
+      <td>${primary ? `<img class="mini-thumb" src="${primary}" alt="Primary story reference image">` : ''}</td>
+      <td><strong>${escapeHtml(rec.title)}</strong></td>
+      <td>${escapeHtml(rec.author || '')}</td>
+      <td>${escapeHtml(rec.source || '')}</td>
+      <td><strong>${Number(rec.zlata_style_match_score).toFixed(1)}</strong></td>
+      <td>${escapeHtml(rec.tier_guess || '')}</td>
+      <td>${escapeHtml(rec.setup_type || '')}</td>
+      <td>${escapeHtml(rec.pov || '')}</td>
+      <td>${escapeHtml((rec.key_tags || []).join(', '))}</td>
+      <td>${escapeHtml(rec.one_sentence_verdict || '')}</td>
+      <td><div class="btn-row"><button class="btn secondary" data-edit="${rec.id}">Edit</button><button class="btn secondary" data-del="${rec.id}">Delete</button></div></td>`;
+    if (primary) tr.querySelector('.mini-thumb').addEventListener('click', ()=> openLightbox(primary));
+    tr.querySelector('[data-edit]').addEventListener('click', ()=> loadRecord(rec.id));
+    tr.querySelector('[data-del]').addEventListener('click', ()=> deleteRecord(rec.id));
+    body.appendChild(tr);
+  });
+}
+
+function loadRecord(id){
+  const rec = state.ranking.find(r => r.id === id); if (!rec) return;
+  state.currentId = rec.id; state.images = structuredClone(rec.images || []);
+  $('title').value = rec.title || ''; $('author').value = rec.author || ''; $('source').value = rec.source || ''; $('url').value = rec.url || '';
+  $('length').value = rec.estimated_length || 'unknown'; $('pov').value = rec.pov || 'unknown'; $('setup').value = rec.setup_type || 'other'; $('tier').value = rec.tier_guess || 'adjacent';
+  $('storyText').value = rec.story_text || ''; $('notes').value = rec.notes || ''; $('keyMoves').value = (rec.key_moves || []).join(', '); $('keyTags').value = (rec.key_tags || []).join(', '); $('warnings').value = (rec.warnings || []).join(', '); $('verdict').value = rec.one_sentence_verdict || '';
+  if (rec.rubric) rubricConfig.forEach(([key]) => { $(key).value = rec.rubric[key] ?? 5; $(key + '_val').textContent = rec.rubric[key] ?? 5; });
+  renderGallery(); updateScore(); window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function deleteRecord(id){
+  state.ranking = state.ranking.filter(r => r.id !== id);
+  if (state.currentId === id) clearForm();
+  renderRanking();
+}
+
+function openLightbox(src){ $('lightboxImg').src = src; $('lightbox').classList.add('open'); }
+function closeLightbox(){ $('lightbox').classList.remove('open'); $('lightboxImg').src = ''; }
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+
+function exportJSON(data, filename){
+  const blob = new Blob([JSON.stringify(data,null,2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = filename; a.click(); URL.revokeObjectURL(url);
+}
+
+$('imageInput').addEventListener('change', async e => {
+  const files = [...e.target.files];
+  const caption = $('imageCaption').value.trim();
+  for (const file of files){
+    const data = await fileToDataURL(file);
+    state.images.push({ name: file.name, caption: caption || file.name, data, is_primary: state.images.length === 0 });
+  }
+  renderGallery();
+  e.target.value = '';
+});
+
+function fileToDataURL(file){ return new Promise((resolve,reject) => { const r = new FileReader(); r.onload = ()=>resolve(r.result); r.onerror = reject; r.readAsDataURL(file); }); }
+
+$('saveRankingBtn').addEventListener('click', ()=> {
+  const rec = getRecord();
+  rec.rubric = Object.fromEntries(rubricConfig.map(([key]) => [key, Number($(key).value)]));
+  const idx = state.ranking.findIndex(r => r.id === rec.id);
+  if (idx >= 0) state.ranking[idx] = rec; else state.ranking.push(rec);
+  state.currentId = rec.id;
+  state.ranking.sort((a,b)=>b.zlata_style_match_score-a.zlata_style_match_score);
+  renderRanking();
+});
+$('clearFormBtn').addEventListener('click', clearForm);
+$('fillDemoBtn').addEventListener('click', fillDemo);
+$('newRecordBtn').addEventListener('click', clearForm);
+$('exportRecordBtn').addEventListener('click', ()=> exportJSON(getRecord(), (getRecord().title || 'story-record').replace(/[^a-z0-9]+/gi,'-').toLowerCase()+'.json'));
+$('exportAllBtn').addEventListener('click', ()=> exportJSON(state.ranking, 'zlata-ranking-board.json'));
+$('copyPromptBtn').addEventListener('click', ()=> navigator.clipboard.writeText($('promptBox').innerText));
+$('themeToggle').addEventListener('click', ()=> document.documentElement.setAttribute('data-theme', document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'));
+$('closeLightbox').addEventListener('click', closeLightbox);
+$('lightbox').addEventListener('click', e => { if (e.target.id === 'lightbox') closeLightbox(); });
+$('importJson').addEventListener('change', async e => {
+  const file = e.target.files[0]; if (!file) return;
+  const text = await file.text();
+  try {
+    const parsed = JSON.parse(text);
+    state.ranking = Array.isArray(parsed) ? parsed : [parsed];
+    state.ranking.sort((a,b)=> (b.zlata_style_match_score||0) - (a.zlata_style_match_score||0));
+    renderRanking();
+    alert('Import complete.');
+  } catch { alert('That file could not be parsed as valid JSON.'); }
+  e.target.value = '';
+});
+
+const navLinks = document.querySelectorAll('.nav a');
+const sections = [...document.querySelectorAll('section[id]')];
+function syncNav(){
+  let current = sections[0]?.id;
+  sections.forEach(sec => { if (sec.getBoundingClientRect().top <= 140) current = sec.id; });
+  navLinks.forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + current));
+}
+document.querySelector('.main').addEventListener('scroll', syncNav);
+
+buildRanges(); clearForm(); renderRanking(); syncNav();
+</script>
+</body>
+</html>
