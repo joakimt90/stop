@@ -149,7 +149,7 @@ function extractSummary(body: string, fieldNames: string[]): string {
 }
 
 /** Detect markdown format and parse accordingly */
-function parseMd(text: string, fileName: string): Entry[] {
+export function parseMdFile(text: string, fileName: string): Entry[] {
   // Deep Dive detection: header with "Deep Dive" or "Bulletin"
   if (/^#{1,2}\s+.+[—–-]\s*(Deep\s*Dive|Bulletin)/m.test(text)) {
     return parseDeepDiveMd(text)
@@ -170,7 +170,7 @@ async function parseFiles(files: FileList | File[]): Promise<{ entries: Entry[];
     arr.map(async (f) => {
       const text = await f.text()
       if (f.name.endsWith('.md')) {
-        return parseMd(text, f.name)
+        return parseMdFile(text, f.name)
       }
       const parsed = JSON.parse(text)
       return Array.isArray(parsed) ? (parsed as Entry[]) : []
@@ -229,17 +229,16 @@ export function UploadArea({ onLoad, onClear, compact = false }: UploadAreaProps
           onDragLeave={onDragLeave}
         >
           <Upload className="w-3.5 h-3.5 shrink-0" />
-          <span>Add files</span>
+          <span>Upload</span>
           <input type="file" accept=".json,.md" multiple className="hidden" onChange={onInputChange} />
         </label>
         {onClear && (
           <button
             onClick={onClear}
             title="Clear all data"
-            className="flex items-center gap-1 text-xs px-2 py-1.5 rounded border border-gray-700 text-gray-500 hover:text-red-400 hover:border-red-800 transition-colors"
+            className="p-1.5 rounded border border-gray-700 text-gray-500 hover:text-red-400 hover:border-red-800 transition-colors"
           >
             <Trash2 className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Clear</span>
           </button>
         )}
         {error && <p className="ml-1 text-red-400 text-xs">{error}</p>}

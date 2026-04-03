@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useState, useMemo, useCallback } from 'react'
-import { LayoutGrid, List, Menu, Columns2, Columns3, Type, Heading } from 'lucide-react'
+import { LayoutGrid, List, Menu, Columns2, Columns3, Type, Heading, Upload, Trash2 } from 'lucide-react'
 
 import type { Entry, FilterState, SortField, SortDir, ViewMode } from '@/types/corpus'
 import { DEFAULT_FILTERS } from '@/types/corpus'
@@ -9,6 +9,7 @@ import { FilterSidebar } from '@/components/FilterSidebar'
 import { EntryCard, EntryListItem } from '@/components/EntryCard'
 import type { SummarySize, SummaryFont, TitleFont, TitleSize } from '@/components/EntryCard'
 import { EntryDetail } from '@/components/EntryDetail'
+import { UploadSidebar } from '@/components/UploadSidebar'
 import { UtilitySidebar } from '@/components/UtilitySidebar'
 
 export const Route = createFileRoute('/')({
@@ -129,6 +130,7 @@ function CorpusExplorer() {
   const [summaryFont, setSummaryFont] = useState<SummaryFont>('sans')
   const [titleFont, setTitleFont] = useState<TitleFont>('sans')
   const [titleSize, setTitleSize] = useState<TitleSize>('medium')
+  const [uploadSidebarOpen, setUploadSidebarOpen] = useState(false)
 
   const handleLoad = useCallback(
     (newEntries: Entry[], count: number, names: string[]) => {
@@ -351,7 +353,20 @@ function CorpusExplorer() {
               <span className="text-xs text-gray-500 hidden sm:block">
                 {fileCount} file{fileCount !== 1 ? 's' : ''}
               </span>
-              <UploadArea onLoad={handleLoad} onClear={clearAll} compact />
+              <button
+                onClick={() => setUploadSidebarOpen(true)}
+                className="flex items-center gap-2 px-3 py-1.5 rounded border border-dashed border-gray-600 hover:border-gray-400 text-gray-400 hover:text-gray-300 cursor-pointer transition-colors text-sm"
+              >
+                <Upload className="w-3.5 h-3.5 shrink-0" />
+                <span>Upload</span>
+              </button>
+              <button
+                  onClick={clearAll}
+                  title="Clear all data"
+                  className="p-1.5 rounded border border-gray-700 text-gray-500 hover:text-red-400 hover:border-red-800 transition-colors"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
             </div>
           </div>
 
@@ -392,6 +407,13 @@ function CorpusExplorer() {
 
       {/* Detail panel */}
       <EntryDetail entry={selected} onClose={() => setSelected(null)} />
+
+      {/* Upload sidebar */}
+      <UploadSidebar
+        open={uploadSidebarOpen}
+        onClose={() => setUploadSidebarOpen(false)}
+        onLoad={handleLoad}
+      />
     </div>
   )
 }
