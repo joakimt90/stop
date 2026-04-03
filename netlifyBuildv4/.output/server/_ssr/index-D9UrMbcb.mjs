@@ -1,0 +1,1185 @@
+import { r as reactExports, j as jsxRuntimeExports } from "../_libs/react.mjs";
+import { M as Menu, L as LayoutGrid, a as List, C as Columns2, b as Columns3, U as Upload, T as Trash2, F as FolderOpen, D as Database, R as RotateCcw, X, S as Search, c as ChevronUp, d as ChevronDown, e as ChartColumn, f as Clock, g as Check, h as Copy } from "../_libs/lucide-react.mjs";
+const DEFAULT_FILTERS = {
+  search: "",
+  bands: [],
+  reviewStates: [],
+  explicit: "all",
+  scoreRange: [0, 100],
+  tags: [],
+  tones: [],
+  poseFamilies: [],
+  portabilities: [],
+  hasRawText: null,
+  dna: []
+};
+const BAND_COLORS = {
+  core: "bg-purple-700 text-purple-100 border-purple-500",
+  excellent: "bg-green-700 text-green-100 border-green-500",
+  strong: "bg-blue-700 text-blue-100 border-blue-500",
+  good: "bg-gray-600 text-gray-100 border-gray-400",
+  partial: "bg-yellow-700 text-yellow-100 border-yellow-500",
+  weak: "bg-gray-500 text-gray-100 border-gray-400"
+};
+const REVIEW_COLORS = {
+  approved: "bg-emerald-800 text-emerald-100 border-emerald-600",
+  raw: "bg-yellow-800 text-yellow-100 border-yellow-600",
+  unset: "bg-gray-700 text-gray-300 border-gray-500"
+};
+function makeEntry(partial) {
+  return {
+    summary: "",
+    author: "",
+    seed: "",
+    explicit: null,
+    band: "good",
+    match_band: "",
+    review_state: null,
+    zstyle_score: 0,
+    tags: [],
+    tone: [],
+    dna: [],
+    character_energy: "",
+    character_note: "",
+    contortion_focus: "",
+    why_it_fits: "",
+    has_raw_text: false,
+    mined: false,
+    sources: [],
+    scenes: [],
+    ...partial
+  };
+}
+function parseStoryMinerMd(text) {
+  const entries = [];
+  const entryBlocks = text.split(/^(\d{2,4})\.\s+/m);
+  for (let i = 1; i < entryBlocks.length; i += 2) {
+    const num = entryBlocks[i];
+    const rest = entryBlocks[i + 1] ?? "";
+    const lines = rest.split("\n");
+    const title = lines[0]?.trim() ?? `Entry ${num}`;
+    const body = lines.slice(1).join("\n");
+    const charEnergy = extractField(body, /Character\s*Energy[:\s]*(.+)/i);
+    const plotScaffold = extractField(body, /Plot\s*Scaffold[:\s]*(.+)/i);
+    const poseSetpiece = extractField(body, /Key\s*Pose\s*Setpiece[:\s]*(.+)/i);
+    const summary = extractSummary(body, ["Character Energy", "Plot Scaffold", "Key Pose Setpiece"]);
+    const tags = [];
+    if (charEnergy) tags.push(charEnergy.split(/[,;]/)[0].trim());
+    if (plotScaffold) tags.push(plotScaffold.split(/[,;]/)[0].trim());
+    const band = poseSetpiece && charEnergy ? "strong" : charEnergy || plotScaffold ? "partial" : "weak";
+    entries.push(makeEntry({
+      id: `sm-${num}`,
+      title,
+      summary,
+      band,
+      tags: tags.filter(Boolean),
+      character_energy: charEnergy,
+      pose_setpiece: poseSetpiece,
+      plot_scaffold: plotScaffold,
+      sources: ["StoryMiner Master Index"]
+    }));
+  }
+  return entries;
+}
+function parseDeepDiveMd(text) {
+  const entries = [];
+  const sections = text.split(/^#{1,2}\s+/m);
+  for (let i = 1; i < sections.length; i++) {
+    const section = sections[i];
+    const lines = section.split("\n");
+    let title = lines[0]?.trim() ?? "";
+    title = title.replace(/\s*[—–-]\s*(Deep\s*Dive|Bulletin)\s*$/i, "").trim();
+    if (!title) continue;
+    const body = lines.slice(1).join("\n");
+    const anatomical = extractField(body, /Anatomical\s*Breakdown[:\s]*(.+)/i);
+    const poseFamily = extractField(body, /PoseFamily[:\s]*(.+)/i);
+    const summary = extractSummary(body, ["Anatomical Breakdown", "PoseFamily"]);
+    const tags = [];
+    if (poseFamily) tags.push(poseFamily.split(/[,;]/)[0].trim());
+    const band = anatomical && poseFamily ? "strong" : anatomical || poseFamily ? "partial" : "weak";
+    entries.push(makeEntry({
+      id: `dd-${i}`,
+      title,
+      summary,
+      band,
+      tags: tags.filter(Boolean),
+      anatomical_breakdown: anatomical,
+      pose_family: poseFamily,
+      sources: ["Deep Dive / Bulletin"],
+      // Also populate a scene with poseFamily for filter compat
+      scenes: poseFamily ? [{
+        exactWording: "",
+        reusableWording: "",
+        poseFamily: poseFamily.split(/[,;]/)[0].trim(),
+        tags: [],
+        dna: "",
+        portability: "",
+        score: 0,
+        matchBand: ""
+      }] : []
+    }));
+  }
+  return entries;
+}
+function extractField(body, regex) {
+  const m = body.match(regex);
+  return m?.[1]?.trim() ?? "";
+}
+function extractSummary(body, fieldNames) {
+  let cleaned = body;
+  for (const name of fieldNames) {
+    cleaned = cleaned.replace(new RegExp(`^.*${name}[:\\s].*$`, "gim"), "");
+  }
+  const paras = cleaned.split(/\n{2,}/).map((p) => p.trim()).filter((p) => p.length > 20);
+  return paras[0] ?? "";
+}
+function parseMd(text, fileName) {
+  if (/^#{1,2}\s+.+[—–-]\s*(Deep\s*Dive|Bulletin)/m.test(text)) {
+    return parseDeepDiveMd(text);
+  }
+  if (/^\d{2,4}\.\s+/m.test(text)) {
+    return parseStoryMinerMd(text);
+  }
+  return parseStoryMinerMd(text);
+}
+async function parseFiles(files) {
+  const arr = Array.from(files).filter((f) => f.name.endsWith(".json") || f.name.endsWith(".md"));
+  const results = await Promise.all(
+    arr.map(async (f) => {
+      const text = await f.text();
+      if (f.name.endsWith(".md")) {
+        return parseMd(text, f.name);
+      }
+      const parsed = JSON.parse(text);
+      return Array.isArray(parsed) ? parsed : [];
+    })
+  );
+  return { entries: results.flat(), names: arr.map((f) => f.name) };
+}
+function UploadArea({ onLoad, onClear, compact = false }) {
+  const [dragging, setDragging] = reactExports.useState(false);
+  const [error, setError] = reactExports.useState(null);
+  const handleFiles = reactExports.useCallback(
+    async (files) => {
+      try {
+        const { entries, names } = await parseFiles(files);
+        if (names.length === 0) {
+          setError("No .json or .md files found in selection.");
+          return;
+        }
+        onLoad(entries, names.length, names);
+        setError(null);
+      } catch {
+        setError("Failed to parse file. Ensure files match an expected format.");
+      }
+    },
+    [onLoad]
+  );
+  const onDrop = reactExports.useCallback(
+    (e) => {
+      e.preventDefault();
+      setDragging(false);
+      handleFiles(e.dataTransfer.files);
+    },
+    [handleFiles]
+  );
+  const onDragOver = (e) => {
+    e.preventDefault();
+    setDragging(true);
+  };
+  const onDragLeave = () => setDragging(false);
+  const onInputChange = (e) => {
+    if (e.target.files) handleFiles(e.target.files);
+  };
+  if (compact) {
+    return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-1.5", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        "label",
+        {
+          className: `flex items-center gap-2 px-3 py-1.5 rounded border border-dashed cursor-pointer transition-colors text-sm
+            ${dragging ? "border-blue-400 bg-blue-900/30 text-blue-300" : "border-gray-600 hover:border-gray-400 text-gray-400 hover:text-gray-300"}`,
+          onDrop,
+          onDragOver,
+          onDragLeave,
+          children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(Upload, { className: "w-3.5 h-3.5 shrink-0" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Add files" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("input", { type: "file", accept: ".json,.md", multiple: true, className: "hidden", onChange: onInputChange })
+          ]
+        }
+      ),
+      onClear && /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        "button",
+        {
+          onClick: onClear,
+          title: "Clear all data",
+          className: "flex items-center gap-1 text-xs px-2 py-1.5 rounded border border-gray-700 text-gray-500 hover:text-red-400 hover:border-red-800 transition-colors",
+          children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(Trash2, { className: "w-3.5 h-3.5" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "hidden sm:inline", children: "Clear" })
+          ]
+        }
+      ),
+      error && /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "ml-1 text-red-400 text-xs", children: error })
+    ] });
+  }
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col items-center justify-center min-h-[70vh] p-8", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "text-center mb-8", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { className: "text-3xl font-bold text-white mb-2", children: "Corpus Explorer" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-gray-400", children: "Upload JSON or Markdown corpus files to browse and filter entries" })
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs(
+      "label",
+      {
+        className: `w-full max-w-2xl flex flex-col items-center justify-center gap-6 p-16 rounded-2xl border-2 border-dashed cursor-pointer transition-all duration-200
+          ${dragging ? "border-blue-400 bg-blue-900/20 scale-[1.02]" : "border-gray-600 hover:border-gray-400 hover:bg-gray-800/50"}`,
+        onDrop,
+        onDragOver,
+        onDragLeave,
+        children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(
+            Upload,
+            {
+              className: `w-14 h-14 transition-colors ${dragging ? "text-blue-400" : "text-gray-500"}`
+            }
+          ),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "text-center", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-xl font-semibold text-gray-200", children: dragging ? "Drop to load" : "Drop files here" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-gray-500 mt-1", children: "or click to browse your files" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-xs text-gray-600 mt-3", children: "Accepts .json corpus files and .md (StoryMiner / Deep Dive) — merged into a single corpus" })
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-500 rounded-lg transition-colors", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(FolderOpen, { className: "w-4 h-4 text-white" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-white font-medium text-sm", children: "Browse Files" })
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("input", { type: "file", accept: ".json,.md", multiple: true, className: "hidden", onChange: onInputChange })
+        ]
+      }
+    ),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-6 flex items-center gap-3 text-gray-500 w-full max-w-2xl", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "h-px flex-1 bg-gray-800" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-xs uppercase tracking-wider", children: "or" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "h-px flex-1 bg-gray-800" })
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs(
+      "button",
+      {
+        onClick: async () => {
+          try {
+            const res = await fetch("/sample-corpus.json");
+            if (!res.ok) throw new Error("Failed to fetch sample data");
+            const data = await res.json();
+            onLoad(data, 1, ["sample-corpus.json"]);
+            setError(null);
+          } catch {
+            setError("Failed to load sample corpus.");
+          }
+        },
+        className: "mt-4 flex items-center gap-2 px-5 py-2.5 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-lg transition-colors",
+        children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(Database, { className: "w-4 h-4 text-gray-400" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-gray-300 font-medium text-sm", children: "Load Sample Corpus" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-xs text-gray-500", children: "(25 entries)" })
+        ]
+      }
+    ),
+    error && /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-4 text-red-400 text-sm bg-red-900/20 border border-red-800 px-4 py-2 rounded-lg", children: error })
+  ] });
+}
+function Section({
+  title,
+  children,
+  defaultOpen = true
+}) {
+  const [open, setOpen] = reactExports.useState(defaultOpen);
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "border-b border-gray-700 py-3", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsxs(
+      "button",
+      {
+        className: "flex items-center justify-between w-full text-left text-sm font-semibold text-gray-200 hover:text-white mb-2",
+        onClick: () => setOpen(!open),
+        children: [
+          title,
+          open ? /* @__PURE__ */ jsxRuntimeExports.jsx(ChevronUp, { className: "w-4 h-4 text-gray-500" }) : /* @__PURE__ */ jsxRuntimeExports.jsx(ChevronDown, { className: "w-4 h-4 text-gray-500" })
+        ]
+      }
+    ),
+    open && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { children })
+  ] });
+}
+function CheckboxItem({
+  label,
+  checked,
+  onChange,
+  count,
+  badge
+}) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("label", { className: "flex items-center gap-2 py-0.5 cursor-pointer group", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx(
+      "input",
+      {
+        type: "checkbox",
+        checked,
+        onChange: (e) => onChange(e.target.checked),
+        className: "accent-blue-500 w-3.5 h-3.5"
+      }
+    ),
+    badge ? /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: `px-1.5 py-0.5 rounded text-xs border ${badge}`, children: label }) : /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-sm text-gray-300 group-hover:text-white", children: label }),
+    count !== void 0 && /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "ml-auto text-xs text-gray-500", children: count })
+  ] });
+}
+function SearchableList({
+  options,
+  selected,
+  onToggle
+}) {
+  const [q, setQ] = reactExports.useState("");
+  const filtered = reactExports.useMemo(() => {
+    const lower = q.toLowerCase();
+    return options.filter((o) => o.value.toLowerCase().includes(lower));
+  }, [options, q]);
+  const show = filtered.slice(0, 50);
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+    options.length > 6 && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "relative mb-2", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx(Search, { className: "absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-500" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        "input",
+        {
+          value: q,
+          onChange: (e) => setQ(e.target.value),
+          placeholder: "Search…",
+          className: "w-full pl-6 pr-2 py-1 bg-gray-800 border border-gray-700 rounded text-xs text-gray-300 placeholder-gray-600 focus:outline-none focus:border-gray-500"
+        }
+      )
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "max-h-40 overflow-y-auto space-y-0.5 pr-1", children: [
+      show.map((o) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+        CheckboxItem,
+        {
+          label: o.value,
+          checked: selected.includes(o.value),
+          onChange: () => onToggle(o.value),
+          count: o.count
+        },
+        o.value
+      )),
+      filtered.length > 50 && /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-xs text-gray-600 pt-1", children: [
+        "+",
+        filtered.length - 50,
+        " more — refine search"
+      ] }),
+      filtered.length === 0 && /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-xs text-gray-600", children: "No matches" })
+    ] })
+  ] });
+}
+function toggle(arr, val) {
+  return arr.includes(val) ? arr.filter((x) => x !== val) : [...arr, val];
+}
+function RangeSlider({
+  min,
+  max,
+  value,
+  onChange
+}) {
+  const lowPct = (value[0] - min) / (max - min) * 100;
+  const highPct = (value[1] - min) / (max - min) * 100;
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex justify-between text-xs text-gray-400 mb-2", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: value[0] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: value[1] })
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "relative h-5 flex items-center", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "absolute w-full h-1.5 bg-gray-700 rounded" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        "div",
+        {
+          className: "absolute h-1.5 bg-blue-500 rounded",
+          style: { left: `${lowPct}%`, width: `${highPct - lowPct}%` }
+        }
+      ),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        "input",
+        {
+          type: "range",
+          min,
+          max,
+          value: value[0],
+          onChange: (e) => {
+            const v = Math.min(+e.target.value, value[1]);
+            onChange([v, value[1]]);
+          },
+          className: "range-thumb absolute w-full appearance-none bg-transparent pointer-events-none"
+        }
+      ),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        "input",
+        {
+          type: "range",
+          min,
+          max,
+          value: value[1],
+          onChange: (e) => {
+            const v = Math.max(+e.target.value, value[0]);
+            onChange([value[0], v]);
+          },
+          className: "range-thumb absolute w-full appearance-none bg-transparent pointer-events-none"
+        }
+      )
+    ] })
+  ] });
+}
+function FilterSidebar({
+  entries,
+  filters,
+  filteredCount,
+  onChange,
+  onClose
+}) {
+  const allTags = reactExports.useMemo(() => {
+    const map = /* @__PURE__ */ new Map();
+    entries.forEach((e) => e.tags?.forEach((t) => map.set(t, (map.get(t) ?? 0) + 1)));
+    return Array.from(map.entries()).sort((a, b) => b[1] - a[1]).map(([value, count]) => ({ value, count }));
+  }, [entries]);
+  const allTones = reactExports.useMemo(() => {
+    const map = /* @__PURE__ */ new Map();
+    entries.forEach((e) => e.tone?.forEach((t) => map.set(t, (map.get(t) ?? 0) + 1)));
+    return Array.from(map.entries()).sort((a, b) => b[1] - a[1]).map(([value, count]) => ({ value, count }));
+  }, [entries]);
+  const allPoseFamilies = reactExports.useMemo(() => {
+    const map = /* @__PURE__ */ new Map();
+    entries.forEach((e) => {
+      e.scenes?.forEach((s) => {
+        if (s.poseFamily) map.set(s.poseFamily, (map.get(s.poseFamily) ?? 0) + 1);
+      });
+      if (e.pose_family) map.set(e.pose_family, (map.get(e.pose_family) ?? 0) + 1);
+    });
+    return Array.from(map.entries()).sort((a, b) => b[1] - a[1]).map(([value, count]) => ({ value, count }));
+  }, [entries]);
+  const allDna = reactExports.useMemo(() => {
+    const map = /* @__PURE__ */ new Map();
+    entries.forEach((e) => e.dna?.forEach((d) => map.set(d, (map.get(d) ?? 0) + 1)));
+    return Array.from(map.entries()).sort((a, b) => b[1] - a[1]).map(([value, count]) => ({ value, count }));
+  }, [entries]);
+  const isDefault = JSON.stringify(filters) === JSON.stringify(DEFAULT_FILTERS);
+  const set = (patch) => onChange({ ...filters, ...patch });
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("aside", { className: "w-full flex flex-col bg-gray-900 border-r border-gray-700 overflow-y-auto", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between px-4 py-3 border-b border-gray-700 sticky top-0 bg-gray-900 z-10", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-sm font-semibold text-gray-200", children: "Filters" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "text-xs text-gray-400", children: [
+          filteredCount,
+          " results"
+        ] }),
+        !isDefault && /* @__PURE__ */ jsxRuntimeExports.jsxs(
+          "button",
+          {
+            onClick: () => onChange(DEFAULT_FILTERS),
+            title: "Reset filters",
+            className: "flex items-center gap-1 text-xs text-blue-400 hover:text-blue-300",
+            children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(RotateCcw, { className: "w-3 h-3" }),
+              "Reset"
+            ]
+          }
+        ),
+        onClose && /* @__PURE__ */ jsxRuntimeExports.jsx("button", { onClick: onClose, className: "text-gray-500 hover:text-gray-300 ml-1", children: /* @__PURE__ */ jsxRuntimeExports.jsx(X, { className: "w-4 h-4" }) })
+      ] })
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "px-4 flex-1", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "py-3 border-b border-gray-700", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "relative", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Search, { className: "absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "input",
+          {
+            value: filters.search,
+            onChange: (e) => set({ search: e.target.value }),
+            placeholder: "Search title, summary, notes…",
+            className: "w-full pl-8 pr-3 py-1.5 bg-gray-800 border border-gray-700 rounded text-sm text-gray-300 placeholder-gray-600 focus:outline-none focus:border-gray-500"
+          }
+        ),
+        filters.search && /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "button",
+          {
+            className: "absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300",
+            onClick: () => set({ search: "" }),
+            children: /* @__PURE__ */ jsxRuntimeExports.jsx(X, { className: "w-3 h-3" })
+          }
+        )
+      ] }) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(Section, { title: "Band", children: ["core", "excellent", "strong", "good", "partial", "weak"].map((b) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+        CheckboxItem,
+        {
+          label: b,
+          checked: filters.bands.includes(b),
+          onChange: () => set({ bands: toggle(filters.bands, b) }),
+          badge: BAND_COLORS[b]
+        },
+        b
+      )) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(Section, { title: "Review State", children: ["approved", "raw", "unset"].map((rs) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+        CheckboxItem,
+        {
+          label: rs,
+          checked: filters.reviewStates.includes(rs),
+          onChange: () => set({ reviewStates: toggle(filters.reviewStates, rs) })
+        },
+        rs
+      )) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(Section, { title: "Explicit", children: ["all", "erotic", "non-explicit"].map((v) => /* @__PURE__ */ jsxRuntimeExports.jsxs("label", { className: "flex items-center gap-2 py-0.5 cursor-pointer", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "input",
+          {
+            type: "radio",
+            name: "explicit",
+            checked: filters.explicit === v,
+            onChange: () => set({ explicit: v }),
+            className: "accent-blue-500"
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-sm text-gray-300", children: v === "all" ? "Show all" : v })
+      ] }, v)) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(Section, { title: "Score Range", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+        RangeSlider,
+        {
+          min: 0,
+          max: 100,
+          value: filters.scoreRange,
+          onChange: (v) => set({ scoreRange: v })
+        }
+      ) }),
+      allTags.length > 0 && /* @__PURE__ */ jsxRuntimeExports.jsx(Section, { title: `Tags${filters.tags.length ? ` (${filters.tags.length})` : ""}`, defaultOpen: false, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+        SearchableList,
+        {
+          options: allTags,
+          selected: filters.tags,
+          onToggle: (v) => set({ tags: toggle(filters.tags, v) })
+        }
+      ) }),
+      allTones.length > 0 && /* @__PURE__ */ jsxRuntimeExports.jsx(Section, { title: `Tone${filters.tones.length ? ` (${filters.tones.length})` : ""}`, defaultOpen: false, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+        SearchableList,
+        {
+          options: allTones,
+          selected: filters.tones,
+          onToggle: (v) => set({ tones: toggle(filters.tones, v) })
+        }
+      ) }),
+      allPoseFamilies.length > 0 && /* @__PURE__ */ jsxRuntimeExports.jsx(Section, { title: `Pose Family${filters.poseFamilies.length ? ` (${filters.poseFamilies.length})` : ""}`, defaultOpen: false, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+        SearchableList,
+        {
+          options: allPoseFamilies,
+          selected: filters.poseFamilies,
+          onToggle: (v) => set({ poseFamilies: toggle(filters.poseFamilies, v) })
+        }
+      ) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(Section, { title: "Portability", defaultOpen: false, children: ["high", "medium", "low"].map((p) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+        CheckboxItem,
+        {
+          label: p,
+          checked: filters.portabilities.includes(p),
+          onChange: () => set({ portabilities: toggle(filters.portabilities, p) })
+        },
+        p
+      )) }),
+      allDna.length > 0 && /* @__PURE__ */ jsxRuntimeExports.jsx(Section, { title: `DNA${filters.dna.length ? ` (${filters.dna.length})` : ""}`, defaultOpen: false, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+        SearchableList,
+        {
+          options: allDna,
+          selected: filters.dna,
+          onToggle: (v) => set({ dna: toggle(filters.dna, v) })
+        }
+      ) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(Section, { title: "Has Raw Text", defaultOpen: false, children: [
+        { label: "Any", value: null },
+        { label: "Yes", value: true },
+        { label: "No", value: false }
+      ].map(({ label, value }) => /* @__PURE__ */ jsxRuntimeExports.jsxs("label", { className: "flex items-center gap-2 py-0.5 cursor-pointer", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "input",
+          {
+            type: "radio",
+            name: "hasRawText",
+            checked: filters.hasRawText === value,
+            onChange: () => set({ hasRawText: value }),
+            className: "accent-blue-500"
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-sm text-gray-300", children: label })
+      ] }, label)) })
+    ] })
+  ] });
+}
+function Badge$1({ text, cls }) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: `inline-block px-1.5 py-0.5 rounded text-xs border font-medium ${cls}`, children: text });
+}
+function EntryCard({ entry, onClick }) {
+  const [showDetails, setShowDetails] = reactExports.useState(false);
+  const matchBand = entry.match_band;
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+    "div",
+    {
+      className: "bg-gray-800/80 border border-gray-700/60 rounded-xl p-4 hover:border-gray-500 hover:bg-gray-800 transition-all duration-150 flex flex-col group",
+      children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-1.5 mb-2", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(Badge$1, { text: entry.band, cls: BAND_COLORS[entry.band] ?? BAND_COLORS["good"] }),
+          matchBand && matchBand !== entry.band && /* @__PURE__ */ jsxRuntimeExports.jsx(Badge$1, { text: matchBand, cls: `${BAND_COLORS[matchBand] ?? BAND_COLORS["good"]} opacity-60` })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "h3",
+          {
+            className: "text-xl font-semibold text-gray-50 leading-snug line-clamp-2 cursor-pointer hover:text-white mb-1",
+            onClick,
+            children: entry.title
+          }
+        ),
+        entry.character_energy && /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-sm italic text-gray-400 mb-3", children: entry.character_energy }),
+        entry.pose_setpiece && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "bg-gray-700/40 border border-gray-600/40 rounded-md px-3 py-1.5 mb-2", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-xs font-medium text-gray-400 uppercase tracking-wide", children: "Key Pose" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-sm text-gray-300 mt-0.5", children: entry.pose_setpiece })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "p",
+          {
+            className: "text-md text-gray-400 leading-relaxed cursor-pointer mb-2",
+            style: { display: "-webkit-box", WebkitLineClamp: showDetails ? 999 : 6, WebkitBoxOrient: "vertical", overflow: "hidden" },
+            onClick,
+            children: entry.summary
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs(
+          "button",
+          {
+            onClick: (e) => {
+              e.stopPropagation();
+              setShowDetails(!showDetails);
+            },
+            className: "flex items-center gap-1 text-xs text-gray-500 hover:text-gray-300 transition-colors self-start mt-auto",
+            children: [
+              showDetails ? /* @__PURE__ */ jsxRuntimeExports.jsx(ChevronUp, { className: "w-3 h-3" }) : /* @__PURE__ */ jsxRuntimeExports.jsx(ChevronDown, { className: "w-3 h-3" }),
+              showDetails ? "Less" : "Details"
+            ]
+          }
+        ),
+        showDetails && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "text-xs text-gray-400 space-y-1.5 border-t border-gray-700/50 pt-2 mt-2", children: [
+          entry.zstyle_score > 0 && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-gray-500", children: "Score:" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-bold text-gray-200", children: entry.zstyle_score })
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-wrap gap-1", children: [
+            entry.review_state && /* @__PURE__ */ jsxRuntimeExports.jsx(Badge$1, { text: entry.review_state, cls: REVIEW_COLORS[entry.review_state] ?? REVIEW_COLORS["unset"] }),
+            entry.explicit && /* @__PURE__ */ jsxRuntimeExports.jsx(Badge$1, { text: entry.explicit, cls: "bg-red-900 text-red-200 border-red-700" })
+          ] }),
+          entry.pose_family && /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-gray-500", children: "Pose Family:" }),
+            " ",
+            entry.pose_family
+          ] }),
+          (entry.tags?.length ?? 0) > 1 && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex flex-wrap gap-1", children: entry.tags.slice(1).map((t) => /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "px-1.5 py-0.5 bg-gray-700 text-gray-300 rounded text-xs", children: t }, t)) }),
+          (entry.scenes?.length ?? 0) > 0 && /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-gray-500", children: "Scenes:" }),
+            " ",
+            entry.scenes.length
+          ] }),
+          entry.seed && /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-gray-500", children: "Seed:" }),
+            " ",
+            entry.seed
+          ] })
+        ] }),
+        (entry.sources?.length > 0 || entry.author) && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-auto pt-2 border-t border-gray-700/40 text-xs text-gray-500 flex items-center gap-2 flex-wrap", children: [
+          entry.author && /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { children: [
+            "by ",
+            entry.author
+          ] }),
+          entry.author && entry.sources?.length > 0 && /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "·" }),
+          entry.sources?.length > 0 && /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: entry.sources.join(", ") })
+        ] })
+      ]
+    }
+  );
+}
+function EntryListItem({ entry, onClick }) {
+  const rs = entry.review_state ?? "unset";
+  const matchBand = entry.match_band;
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+    "div",
+    {
+      onClick,
+      className: "flex items-center gap-3 px-4 py-2.5 border-b border-gray-800 hover:bg-gray-800/70 cursor-pointer transition-colors",
+      children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-lg font-bold text-gray-200 tabular-nums w-10 shrink-0", children: entry.zstyle_score ?? "—" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Badge$1, { text: entry.band, cls: BAND_COLORS[entry.band] ?? BAND_COLORS["good"] }),
+        matchBand && matchBand !== entry.band && /* @__PURE__ */ jsxRuntimeExports.jsx(Badge$1, { text: matchBand, cls: `${BAND_COLORS[matchBand] ?? BAND_COLORS["good"]} opacity-60` }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Badge$1, { text: rs, cls: REVIEW_COLORS[rs] ?? REVIEW_COLORS["unset"] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-sm text-gray-200 flex-1 truncate font-medium", children: entry.title }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "text-xs text-gray-500 shrink-0", children: [
+          entry.tags?.length ?? 0,
+          " tags"
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "text-xs text-gray-500 shrink-0", children: [
+          entry.scenes?.length ?? 0,
+          " scenes"
+        ] })
+      ]
+    }
+  );
+}
+function Badge({ text, cls }) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: `inline-block px-2 py-0.5 rounded text-xs border font-medium ${cls}`, children: text });
+}
+function Pill({ text }) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "inline-block px-2 py-0.5 bg-gray-700 text-gray-300 rounded text-xs", children: text });
+}
+function Field({ label, value }) {
+  if (!value && value !== 0) return null;
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx("dt", { className: "text-xs text-gray-500 uppercase tracking-wide mb-0.5", children: label }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("dd", { className: "text-sm text-gray-200", children: value })
+  ] });
+}
+function CopyButton({ text }) {
+  const [copied, setCopied] = reactExports.useState(false);
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2e3);
+    } catch {
+    }
+  };
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+    "button",
+    {
+      onClick: copy,
+      className: "flex items-center gap-1 text-xs px-2 py-1 rounded bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white transition-colors",
+      children: [
+        copied ? /* @__PURE__ */ jsxRuntimeExports.jsx(Check, { className: "w-3 h-3 text-green-400" }) : /* @__PURE__ */ jsxRuntimeExports.jsx(Copy, { className: "w-3 h-3" }),
+        copied ? "Copied" : "Copy"
+      ]
+    }
+  );
+}
+function SceneCard({ scene, idx }) {
+  const [open, setOpen] = reactExports.useState(idx === 0);
+  const portColors = {
+    high: "bg-green-800 text-green-200 border-green-700",
+    medium: "bg-yellow-800 text-yellow-200 border-yellow-700",
+    low: "bg-red-900 text-red-200 border-red-800"
+  };
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "border border-gray-700 rounded-lg overflow-hidden", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsxs(
+      "button",
+      {
+        onClick: () => setOpen(!open),
+        className: "w-full flex items-center justify-between px-3 py-2.5 bg-gray-800 hover:bg-gray-750 text-left",
+        children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2 flex-wrap", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "text-sm font-medium text-gray-200", children: [
+              "Scene ",
+              idx + 1,
+              scene.poseFamily ? ` — ${scene.poseFamily}` : ""
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "text-xs text-gray-400 font-bold", children: [
+              "×",
+              scene.score
+            ] }),
+            scene.matchBand && /* @__PURE__ */ jsxRuntimeExports.jsx(
+              Badge,
+              {
+                text: scene.matchBand,
+                cls: BAND_COLORS[scene.matchBand] ?? "bg-gray-600 text-gray-200 border-gray-500"
+              }
+            ),
+            scene.portability && /* @__PURE__ */ jsxRuntimeExports.jsx(
+              Badge,
+              {
+                text: scene.portability,
+                cls: portColors[scene.portability] ?? "bg-gray-700 text-gray-300 border-gray-600"
+              }
+            ),
+            scene.tags?.slice(0, 3).map((t) => /* @__PURE__ */ jsxRuntimeExports.jsx(Pill, { text: t }, t))
+          ] }),
+          open ? /* @__PURE__ */ jsxRuntimeExports.jsx(ChevronUp, { className: "w-4 h-4 text-gray-500 shrink-0" }) : /* @__PURE__ */ jsxRuntimeExports.jsx(ChevronDown, { className: "w-4 h-4 text-gray-500 shrink-0" })
+        ]
+      }
+    ),
+    open && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "px-3 py-3 bg-gray-900 space-y-3", children: [
+      scene.dna && /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-xs text-gray-400 italic", children: scene.dna }),
+      scene.exactWording && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-xs text-gray-500 uppercase tracking-wide mb-1", children: "Exact Wording" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("blockquote", { className: "font-mono text-xs text-gray-300 bg-gray-800 border-l-2 border-gray-600 px-3 py-2 rounded whitespace-pre-wrap leading-relaxed", children: scene.exactWording })
+      ] }),
+      scene.reusableWording && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between mb-1", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-xs text-gray-500 uppercase tracking-wide", children: "Reusable Wording" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(CopyButton, { text: scene.reusableWording })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-sm text-gray-200 bg-gray-800 px-3 py-2 rounded leading-relaxed", children: scene.reusableWording })
+      ] })
+    ] })
+  ] });
+}
+function EntryDetail({ entry, onClose }) {
+  reactExports.useEffect(() => {
+    const handler = (e) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [onClose]);
+  if (!entry) return null;
+  const rs = entry.review_state ?? "unset";
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx(
+      "div",
+      {
+        className: "fixed inset-0 bg-black/60 z-40 transition-opacity",
+        onClick: onClose
+      }
+    ),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "fixed right-0 top-0 h-full w-full max-w-2xl bg-gray-900 border-l border-gray-700 z-50 flex flex-col shadow-2xl overflow-hidden", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-start justify-between px-5 py-4 border-b border-gray-700 shrink-0", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex-1 min-w-0 pr-3", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "text-lg font-bold text-white leading-tight", children: entry.title }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-xs text-gray-500 mt-0.5 font-mono", children: entry.id })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "button",
+          {
+            onClick: onClose,
+            className: "text-gray-500 hover:text-gray-200 transition-colors shrink-0 mt-0.5",
+            children: /* @__PURE__ */ jsxRuntimeExports.jsx(X, { className: "w-5 h-5" })
+          }
+        )
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex-1 overflow-y-auto px-5 py-4 space-y-5", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-wrap gap-2", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(Badge, { text: entry.band, cls: BAND_COLORS[entry.band] ?? BAND_COLORS["good"] }),
+          entry.match_band && entry.match_band !== entry.band && /* @__PURE__ */ jsxRuntimeExports.jsx(
+            Badge,
+            {
+              text: `match: ${entry.match_band}`,
+              cls: BAND_COLORS[entry.match_band] ?? BAND_COLORS["good"]
+            }
+          ),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(Badge, { text: rs, cls: REVIEW_COLORS[rs] ?? REVIEW_COLORS["unset"] }),
+          entry.explicit && /* @__PURE__ */ jsxRuntimeExports.jsx(Badge, { text: entry.explicit, cls: "bg-red-900 text-red-200 border-red-700" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "inline-flex items-center px-2 py-0.5 rounded text-xs border border-gray-600 bg-gray-800 text-gray-200 font-bold", children: entry.zstyle_score ?? "—" })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("dl", { className: "grid grid-cols-2 gap-3", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(Field, { label: "Author", value: entry.author }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(Field, { label: "Seed", value: entry.seed }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(Field, { label: "Has Raw Text", value: entry.has_raw_text ? "Yes" : "No" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(Field, { label: "Mined", value: entry.mined ? "Yes" : "No" })
+        ] }),
+        entry.summary && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-xs text-gray-500 uppercase tracking-wide mb-1", children: "Summary" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-sm text-gray-300 leading-relaxed", children: entry.summary })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-2", children: [
+          entry.character_energy && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-xs text-gray-500 uppercase tracking-wide mb-0.5", children: "Character Energy" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-sm text-gray-300", children: entry.character_energy })
+          ] }),
+          entry.character_note && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-xs text-gray-500 uppercase tracking-wide mb-0.5", children: "Character Note" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-sm text-gray-300", children: entry.character_note })
+          ] })
+        ] }),
+        (entry.contortion_focus || entry.why_it_fits || entry.pose_setpiece || entry.plot_scaffold || entry.anatomical_breakdown || entry.pose_family) && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-2", children: [
+          entry.contortion_focus && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-xs text-gray-500 uppercase tracking-wide mb-0.5", children: "Contortion Focus" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-sm text-gray-300", children: entry.contortion_focus })
+          ] }),
+          entry.why_it_fits && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-xs text-gray-500 uppercase tracking-wide mb-0.5", children: "Why It Fits" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-sm text-gray-300", children: entry.why_it_fits })
+          ] }),
+          entry.pose_setpiece && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-xs text-gray-500 uppercase tracking-wide mb-0.5", children: "Key Pose Setpiece" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-sm text-gray-300", children: entry.pose_setpiece })
+          ] }),
+          entry.plot_scaffold && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-xs text-gray-500 uppercase tracking-wide mb-0.5", children: "Plot Scaffold" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-sm text-gray-300", children: entry.plot_scaffold })
+          ] }),
+          entry.anatomical_breakdown && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-xs text-gray-500 uppercase tracking-wide mb-0.5", children: "Anatomical Breakdown" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-sm text-gray-300", children: entry.anatomical_breakdown })
+          ] }),
+          entry.pose_family && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-xs text-gray-500 uppercase tracking-wide mb-0.5", children: "Pose Family" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-sm text-gray-300", children: entry.pose_family })
+          ] })
+        ] }),
+        entry.dna?.length > 0 && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-xs text-gray-500 uppercase tracking-wide mb-1", children: "DNA" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex flex-wrap gap-1", children: entry.dna.map((d) => /* @__PURE__ */ jsxRuntimeExports.jsx(Pill, { text: d }, d)) })
+        ] }),
+        entry.tone?.length > 0 && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-xs text-gray-500 uppercase tracking-wide mb-1", children: "Tone" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex flex-wrap gap-1", children: entry.tone.map((t) => /* @__PURE__ */ jsxRuntimeExports.jsx(Pill, { text: t }, t)) })
+        ] }),
+        entry.tags?.length > 0 && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-xs text-gray-500 uppercase tracking-wide mb-1", children: "Tags" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex flex-wrap gap-1", children: entry.tags.map((t) => /* @__PURE__ */ jsxRuntimeExports.jsx(Pill, { text: t }, t)) })
+        ] }),
+        entry.sources?.length > 0 && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-xs text-gray-500 uppercase tracking-wide mb-1", children: "Sources" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("ul", { className: "space-y-0.5", children: entry.sources.map((s, i) => /* @__PURE__ */ jsxRuntimeExports.jsxs("li", { className: "text-xs text-gray-400", children: [
+            "• ",
+            s
+          ] }, i)) })
+        ] }),
+        entry.scenes?.length > 0 && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-xs text-gray-500 uppercase tracking-wide mb-2", children: [
+            "Scenes (",
+            entry.scenes.length,
+            ")"
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "space-y-2", children: entry.scenes.map((scene, i) => /* @__PURE__ */ jsxRuntimeExports.jsx(SceneCard, { scene, idx: i }, i)) })
+        ] })
+      ] })
+    ] })
+  ] });
+}
+function Panel({
+  title,
+  icon: Icon,
+  defaultOpen = true,
+  children
+}) {
+  const [open, setOpen] = reactExports.useState(defaultOpen);
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "border-b border-gray-800", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsxs(
+      "button",
+      {
+        className: "flex items-center gap-2 w-full px-3 py-2.5 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider hover:text-gray-200 transition-colors",
+        onClick: () => setOpen(!open),
+        children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(Icon, { className: "w-3.5 h-3.5" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "flex-1", children: title }),
+          open ? /* @__PURE__ */ jsxRuntimeExports.jsx(ChevronUp, { className: "w-3 h-3" }) : /* @__PURE__ */ jsxRuntimeExports.jsx(ChevronDown, { className: "w-3 h-3" })
+        ]
+      }
+    ),
+    open && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "px-3 pb-3", children })
+  ] });
+}
+function UtilitySidebar({ entries, filteredEntries, fileCount, fileNames }) {
+  const totalScenes = filteredEntries.reduce((sum, e) => sum + (e.scenes?.length ?? 0), 0);
+  const avgScore = filteredEntries.length > 0 ? filteredEntries.reduce((sum, e) => sum + (e.zstyle_score ?? 0), 0) / filteredEntries.length : 0;
+  const bandCounts = /* @__PURE__ */ new Map();
+  filteredEntries.forEach((e) => bandCounts.set(e.band, (bandCounts.get(e.band) ?? 0) + 1));
+  const bandOrder = ["core", "excellent", "strong", "good", "partial", "weak"];
+  const tagMap = /* @__PURE__ */ new Map();
+  filteredEntries.forEach((e) => e.tags?.forEach((t) => tagMap.set(t, (tagMap.get(t) ?? 0) + 1)));
+  const topTags = Array.from(tagMap.entries()).sort((a, b) => b[1] - a[1]).slice(0, 8);
+  const isFiltered = filteredEntries.length !== entries.length;
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("aside", { className: "w-56 shrink-0 bg-gray-900/50 border-l border-gray-800 overflow-y-auto hidden xl:flex flex-col", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx(Panel, { title: "Stats", icon: ChartColumn, defaultOpen: true, children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-2", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid grid-cols-2 gap-2", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "bg-gray-800/60 rounded-lg px-2.5 py-2", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "text-lg font-bold text-gray-100 tabular-nums leading-tight", children: [
+            filteredEntries.length,
+            isFiltered && /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "text-xs font-normal text-gray-500", children: [
+              "/",
+              entries.length
+            ] })
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-xs text-gray-500", children: "entries" })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "bg-gray-800/60 rounded-lg px-2.5 py-2", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-lg font-bold text-gray-100 tabular-nums leading-tight", children: totalScenes }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-xs text-gray-500", children: "scenes" })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "bg-gray-800/60 rounded-lg px-2.5 py-2", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-lg font-bold text-gray-100 tabular-nums leading-tight", children: avgScore.toFixed(0) }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-xs text-gray-500", children: "avg score" })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "bg-gray-800/60 rounded-lg px-2.5 py-2", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-lg font-bold text-gray-100 tabular-nums leading-tight", children: fileCount }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-xs text-gray-500", children: "files" })
+        ] })
+      ] }),
+      bandCounts.size > 0 && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-1 pt-1", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-xs text-gray-500 font-medium", children: "Band distribution" }),
+        bandOrder.filter((b) => bandCounts.has(b)).map((band) => {
+          const count = bandCounts.get(band) ?? 0;
+          const pct = filteredEntries.length > 0 ? count / filteredEntries.length * 100 : 0;
+          return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: `inline-block w-14 text-right px-1 py-0.5 rounded text-xs border font-medium ${BAND_COLORS[band]}`, children: band }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex-1 h-1.5 bg-gray-800 rounded-full overflow-hidden", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+              "div",
+              {
+                className: "h-full bg-gray-500 rounded-full transition-all",
+                style: { width: `${pct}%` }
+              }
+            ) }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-xs text-gray-500 tabular-nums w-6 text-right", children: count })
+          ] }, band);
+        })
+      ] }),
+      topTags.length > 0 && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-1 pt-1", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-xs text-gray-500 font-medium", children: "Top tags" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex flex-wrap gap-1", children: topTags.map(([tag, count]) => /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "px-1.5 py-0.5 bg-gray-800 text-gray-400 rounded text-xs", children: [
+          tag,
+          " ",
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-gray-600", children: count })
+        ] }, tag)) })
+      ] })
+    ] }) }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(Panel, { title: "Recent Activity", icon: Clock, defaultOpen: false, children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "space-y-1.5", children: fileNames.length === 0 ? /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-xs text-gray-600 italic", children: "No files loaded" }) : fileNames.map((name, i) => /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-xs text-gray-400 truncate", title: name, children: name }, i)) }) })
+  ] });
+}
+function applyFilters(entries, filters) {
+  return entries.filter((entry) => {
+    if (filters.search) {
+      const q = filters.search.toLowerCase();
+      const hay = [entry.title, entry.summary, entry.character_note, entry.contortion_focus, entry.why_it_fits, entry.character_energy, entry.pose_setpiece, entry.pose_family].filter(Boolean).join(" ").toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    if (filters.bands.length > 0 && !filters.bands.includes(entry.band)) return false;
+    if (filters.reviewStates.length > 0) {
+      const rs = entry.review_state ?? "unset";
+      if (!filters.reviewStates.includes(rs)) return false;
+    }
+    if (filters.explicit === "erotic" && entry.explicit !== "erotic") return false;
+    if (filters.explicit === "non-explicit" && entry.explicit != null) return false;
+    const score = entry.zstyle_score ?? 0;
+    if (score < filters.scoreRange[0] || score > filters.scoreRange[1]) return false;
+    if (filters.tags.length > 0 && !filters.tags.some((t) => entry.tags?.includes(t))) return false;
+    if (filters.tones.length > 0 && !filters.tones.some((t) => entry.tone?.includes(t))) return false;
+    if (filters.poseFamilies.length > 0) {
+      const sceneMatch = entry.scenes?.some((s) => filters.poseFamilies.includes(s.poseFamily));
+      const entryMatch = entry.pose_family && filters.poseFamilies.includes(entry.pose_family);
+      if (!sceneMatch && !entryMatch) return false;
+    }
+    if (filters.portabilities.length > 0 && !entry.scenes?.some((s) => filters.portabilities.includes(s.portability))) return false;
+    if (filters.hasRawText !== null && entry.has_raw_text !== filters.hasRawText) return false;
+    if (filters.dna.length > 0 && !filters.dna.some((d) => entry.dna?.includes(d))) return false;
+    return true;
+  });
+}
+function applySort(entries, field, dir) {
+  const sorted = [...entries].sort((a, b) => {
+    switch (field) {
+      case "zstyle_score":
+        return (b.zstyle_score ?? 0) - (a.zstyle_score ?? 0);
+      case "title":
+        return (a.title ?? "").localeCompare(b.title ?? "");
+      case "scene_count":
+        return (b.scenes?.length ?? 0) - (a.scenes?.length ?? 0);
+      case "review_state": {
+        const order = {
+          approved: 0,
+          raw: 1,
+          unset: 2
+        };
+        const ra = order[a.review_state ?? "unset"] ?? 2;
+        const rb = order[b.review_state ?? "unset"] ?? 2;
+        return ra - rb;
+      }
+      default:
+        return 0;
+    }
+  });
+  return dir === "asc" ? sorted.reverse() : sorted;
+}
+const SORT_OPTIONS = [{
+  value: "zstyle_score",
+  label: "Score"
+}, {
+  value: "title",
+  label: "Title"
+}, {
+  value: "scene_count",
+  label: "Scenes"
+}, {
+  value: "review_state",
+  label: "Review State"
+}];
+function CorpusExplorer() {
+  const [entries, setEntries] = reactExports.useState([]);
+  const [fileCount, setFileCount] = reactExports.useState(0);
+  const [fileNames, setFileNames] = reactExports.useState([]);
+  const [filters, setFilters] = reactExports.useState(DEFAULT_FILTERS);
+  const [sortField, setSortField] = reactExports.useState("zstyle_score");
+  const [sortDir, setSortDir] = reactExports.useState("desc");
+  const [viewMode, setViewMode] = reactExports.useState("grid");
+  const [selected, setSelected] = reactExports.useState(null);
+  const [sidebarOpen, setSidebarOpen] = reactExports.useState(false);
+  const [gridCols, setGridCols] = reactExports.useState(3);
+  const handleLoad = reactExports.useCallback((newEntries, count, names) => {
+    setEntries((prev) => {
+      const existingIds = new Set(prev.map((e) => e.id));
+      const merged = [...prev, ...newEntries.filter((e) => !existingIds.has(e.id))];
+      return merged;
+    });
+    setFileCount((c) => c + count);
+    setFileNames((n) => [...n, ...names]);
+  }, []);
+  const clearAll = reactExports.useCallback(() => {
+    setEntries([]);
+    setFileCount(0);
+    setFileNames([]);
+    setFilters(DEFAULT_FILTERS);
+    setSelected(null);
+  }, []);
+  const filteredEntries = reactExports.useMemo(() => applyFilters(entries, filters), [entries, filters]);
+  const sortedEntries = reactExports.useMemo(() => applySort(filteredEntries, sortField, sortDir), [filteredEntries, sortField, sortDir]);
+  if (entries.length === 0) {
+    return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "min-h-screen bg-gray-950 text-gray-100", children: /* @__PURE__ */ jsxRuntimeExports.jsx(UploadArea, { onLoad: handleLoad }) });
+  }
+  const gridClass = viewMode === "grid" ? gridCols === 2 ? "grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-5xl" : "grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4" : "";
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "min-h-screen bg-gray-950 text-gray-100 flex flex-col", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-1 overflow-hidden", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: `
+            ${sidebarOpen ? "fixed inset-0 z-40 flex" : "hidden"}
+            lg:relative lg:flex lg:inset-auto lg:z-auto
+            w-64 shrink-0
+          `, children: [
+        sidebarOpen && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "absolute inset-0 bg-black/50 lg:hidden", onClick: () => setSidebarOpen(false) }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "relative z-10 w-64 h-full lg:h-auto", children: /* @__PURE__ */ jsxRuntimeExports.jsx(FilterSidebar, { entries, filters, filteredCount: filteredEntries.length, onChange: setFilters, onClose: () => setSidebarOpen(false) }) })
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("main", { className: "flex-1 overflow-y-auto", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "sticky top-0 z-20 flex items-center gap-2 px-4 py-2 bg-gray-900/95 backdrop-blur border-b border-gray-800", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "lg:hidden p-1.5 rounded text-gray-400 hover:text-gray-200 hover:bg-gray-800", onClick: () => setSidebarOpen(true), children: /* @__PURE__ */ jsxRuntimeExports.jsx(Menu, { className: "w-4 h-4" }) }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-1.5", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("select", { value: sortField, onChange: (e) => setSortField(e.target.value), className: "text-xs bg-gray-800 border border-gray-700 rounded px-2 py-1 text-gray-300 focus:outline-none", children: SORT_OPTIONS.map((o) => /* @__PURE__ */ jsxRuntimeExports.jsx("option", { value: o.value, children: o.label }, o.value)) }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("button", { onClick: () => setSortDir((d) => d === "desc" ? "asc" : "desc"), className: "text-xs bg-gray-800 border border-gray-700 rounded px-2 py-1 text-gray-300 hover:text-white", title: "Toggle sort direction", children: sortDir === "desc" ? "↓" : "↑" })
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center border border-gray-700 rounded overflow-hidden ml-1", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("button", { onClick: () => setViewMode("grid"), className: `p-1.5 transition-colors ${viewMode === "grid" ? "bg-gray-700 text-white" : "text-gray-500 hover:text-gray-300"}`, title: "Grid view", children: /* @__PURE__ */ jsxRuntimeExports.jsx(LayoutGrid, { className: "w-3.5 h-3.5" }) }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("button", { onClick: () => setViewMode("list"), className: `p-1.5 transition-colors ${viewMode === "list" ? "bg-gray-700 text-white" : "text-gray-500 hover:text-gray-300"}`, title: "List view", children: /* @__PURE__ */ jsxRuntimeExports.jsx(List, { className: "w-3.5 h-3.5" }) })
+          ] }),
+          viewMode === "grid" && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center border border-gray-700 rounded overflow-hidden ml-1", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("button", { onClick: () => setGridCols(2), className: `p-1.5 transition-colors ${gridCols === 2 ? "bg-gray-700 text-white" : "text-gray-500 hover:text-gray-300"}`, title: "2 columns", children: /* @__PURE__ */ jsxRuntimeExports.jsx(Columns2, { className: "w-3.5 h-3.5" }) }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("button", { onClick: () => setGridCols(3), className: `p-1.5 transition-colors ${gridCols === 3 ? "bg-gray-700 text-white" : "text-gray-500 hover:text-gray-300"}`, title: "3 columns", children: /* @__PURE__ */ jsxRuntimeExports.jsx(Columns3, { className: "w-3.5 h-3.5" }) })
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "hidden md:flex items-center gap-3 ml-3 text-xs text-gray-500", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { children: [
+            filteredEntries.length,
+            filteredEntries.length !== entries.length ? `/${entries.length}` : "",
+            " entries"
+          ] }) }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "ml-auto flex items-center gap-2", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "text-xs text-gray-500 hidden sm:block", children: [
+              fileCount,
+              " file",
+              fileCount !== 1 ? "s" : ""
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(UploadArea, { onLoad: handleLoad, onClear: clearAll, compact: true })
+          ] })
+        ] }),
+        sortedEntries.length === 0 ? /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col items-center justify-center py-24 text-gray-600", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-lg", children: "No entries match current filters" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("button", { onClick: () => setFilters(DEFAULT_FILTERS), className: "mt-3 text-sm text-blue-500 hover:text-blue-400", children: "Reset filters" })
+        ] }) : viewMode === "grid" ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: `p-4 ${gridClass}`, children: sortedEntries.map((entry) => /* @__PURE__ */ jsxRuntimeExports.jsx(EntryCard, { entry, onClick: () => setSelected(entry) }, entry.id)) }) : /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "divide-y divide-gray-800", children: sortedEntries.map((entry) => /* @__PURE__ */ jsxRuntimeExports.jsx(EntryListItem, { entry, onClick: () => setSelected(entry) }, entry.id)) })
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(UtilitySidebar, { entries, filteredEntries, fileCount, fileNames })
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(EntryDetail, { entry: selected, onClose: () => setSelected(null) })
+  ] });
+}
+export {
+  CorpusExplorer as component
+};
