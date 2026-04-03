@@ -1,18 +1,24 @@
 import { defineConfig } from 'vite'
 import { tanstackStart } from '@tanstack/react-start/plugin/vite'
-import { nitro } from 'nitro/vite'
 import viteReact from '@vitejs/plugin-react'
 import viteTsConfigPaths from 'vite-tsconfig-paths'
 import tailwindcss from '@tailwindcss/vite'
+import netlify from '@netlify/vite-plugin-tanstack-start'
 
-export default defineConfig({
+const config = defineConfig({
+  server: {
+    allowedHosts: ['.replit.dev'],
+  },
+
   plugins: [
     viteTsConfigPaths({
       projects: ['./tsconfig.json'],
     }),
     tailwindcss(),
+    netlify(),
     tanstackStart(),
-    nitro(),
     viteReact(),
   ],
 })
+
+export default config
